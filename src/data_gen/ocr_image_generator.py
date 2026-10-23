@@ -29,6 +29,9 @@ class BillImageGenerator:
         # Try common Windows/system fonts, fallback to default bitmap
         candidate_fonts = [
             "consola.ttf", "arial.ttf", "cour.ttf", "calibri.ttf",
+            "DejaVuSansMono.ttf", "LiberationMono-Regular.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf",
             "C:/Windows/Fonts/consola.ttf", "C:/Windows/Fonts/arial.ttf"
         ]
         for f in candidate_fonts:

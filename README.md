@@ -231,7 +231,7 @@ docker-compose -f docker/docker-compose.yml up --build
 
 ---
 
-## 🧪 Comprehensive Test Suite (34/34 Passing)
+## 🧪 Comprehensive Test Suite (42/42 Passing)
 
 | Stage | Module | Tests | Status | Key Coverage |
 |---|---|---|---|---|
@@ -271,5 +271,15 @@ BillGuard is an academic public-interest engineering project designed to assist 
 ---
 
 ## 🎓 Academic Capstone Submission Details
-- **Project Title:** BillGuard: An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System
-- **Documentation:** See [`docs/architecture.md`](docs/architecture.md), [`docs/tariff_methodology.md`](docs/tariff_methodology.md), and [`docs/final_year_project_report_outline.md`](docs/final_year_project_report_outline.md).
+- **Project Title:** BillGuard: An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System for Indian Domestic Consumers
+- **Project Team Members:**
+  1. **Selvamani** — Register No: `2023510035` (Lead MLOps Engineer & Core Pipeline Architect)
+  2. **Subramani** — Register No: `2023510024` (Lead ML & Tariff Systems Engineer)
+- **Final-Year Project Report Deliverables:**
+  - 📄 [**Word Format (.docx)**](project_report/BillGuard_Project_Report.docx) — Fully styled academic report with custom tables, callouts, and embedded figures.
+  - 📑 [**PDF Format (.pdf)**](project_report/BillGuard_Project_Report.pdf) — 13-page publication-grade PDF report with running headers and two-pass page numbering.
+  - 📐 [**Architecture Graphic**](project_report/architecture_diagram.png) — 300 DPI high-resolution 10-subsystem architecture diagram.
+  - 🖼️ [**Application Screenshots**](project_report/report_screenshots/) — Genuine application captures for Figures 1 to 6.
+- **Cloud Deployment Guide:**
+  - 🚀 Refer to [**`DEPLOYMENT.md`**](DEPLOYMENT.md) for step-by-step instructions on deploying BillGuard to **Streamlit Community Cloud** or as a Docker container.
+- **Documentation:** See [`docs/architecture.md`](docs/architecture.md), [`docs/tariff_methodology.md`](docs/tariff_methodology.md), and [`project_report/README.txt`](project_report/README.txt).

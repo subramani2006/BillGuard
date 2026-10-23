@@ -1,4 +1,11 @@
-"""Historical Consumption Analytics and Longitudinal Trends with Data Integrity Audit."""
+import os
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path for cloud deployment
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import streamlit as st
 import pandas as pd

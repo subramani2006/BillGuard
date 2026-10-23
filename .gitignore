@@ -1,28 +1,47 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# C/C++ build artifacts & virtual environments
 .Python
 env/
 venv/
+.venv/
 ENV/
+env.bak/
+venv.bak/
 
-# Pytest
+# Testing & Coverage
 .pytest_cache/
 .coverage
 htmlcov/
 test-results.xml
 
-# Databases & local logs
+# Databases & local run logs (Keep models/ and data/synthetic/ tracked)
 *.db
+*.sqlite
 *.log
-data/temp_*.pdf
-
-# MLflow
 mlruns/
 mlflow.db
+data/billguard_audit.db
+data/temp_*.pdf
 
-# OS
+# Secrets, local environment & credentials
+.env
+.env.*
+secrets.toml
+.streamlit/secrets.toml
+
+# OS & Editor generated files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Temporary scratch and test snapshots
+project_report/report_screenshots/test_real.png
+project_report/report_screenshots/shot1.png

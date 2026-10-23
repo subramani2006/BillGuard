@@ -1,7 +1,13 @@
-"""Bill Verifier & OCR Audit Page with Evidence-Based Investigation Report."""
+import os
+import sys
+from pathlib import Path
+
+# Ensure project root is in sys.path for cloud deployment
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import io
-import os
 import streamlit as st
 from PIL import Image
 import pandas as pd
