@@ -1,0 +1,22 @@
+{
+  "baseline": {
+    "precision": 0.2059,
+    "recall": 0.7,
+    "f1_score": 0.3182,
+    "roc_auc": 0.7305
+  },
+  "isolation_forest": {
+    "precision": 0.5,
+    "recall": 0.8,
+    "f1_score": 0.6154,
+    "roc_auc": 0.9582
+  },
+  "autoencoder": {
+    "precision": 0.4444,
+    "recall": 0.8,
+    "f1_score": 0.5714,
+    "roc_auc": 0.9291
+  },
+  "test_samples_count": 120,
+  "anomaly_samples_count": 10
+}

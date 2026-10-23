@@ -106,7 +106,7 @@ def seed_all():
             ml_score=0.85 if exp.is_anomaly else 0.12,
         ))
 
-    print("\n✅ SEEDING COMPLETE! BillGuard is fully initialized and operational.")
+    print("\n[SUCCESS] SEEDING COMPLETE! BillGuard is fully initialized and operational.")
 
 
 if __name__ == "__main__":

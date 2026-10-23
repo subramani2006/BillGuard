@@ -43,14 +43,14 @@ st.markdown("### 📋 Versioned Slab Structure")
 slabs_data = []
 for s in tariff_cfg.slabs:
     slabs_data.append({
-        "Min Units": s.min_units,
-        "Max Units": s.max_units if s.max_units is not None else "Above 1000",
+        "Min Units": str(s.min_units),
+        "Max Units": str(s.max_units) if s.max_units is not None else "Above 1000",
         "Gross Rate (₹/kWh)": f"₹{s.rate_per_unit:.2f}",
         "GoTN Subsidy (₹/kWh)": f"₹{s.subsidy_per_unit:.2f}",
         "Net Consumer Rate (₹/kWh)": f"₹{s.net_rate:.2f}",
         "Description": s.description,
     })
-st.dataframe(pd.DataFrame(slabs_data), hide_index=True, use_container_width=True)
+st.dataframe(pd.DataFrame(slabs_data), hide_index=True)
 
 st.markdown("---")
 st.markdown("### 🧮 Interactive Tariff & Billing Cycle Delay Simulator")

@@ -27,3 +27,4 @@ pyyaml>=6.0.0
 # Testing & Utilities
 pytest>=7.4.0
 reportlab>=4.0.0
+plotly>=5.15.0
