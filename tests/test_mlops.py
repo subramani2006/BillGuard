@@ -126,3 +126,41 @@ def test_audit_logger(tmp_path):
     stats = logger.get_audit_summary_stats()
     assert stats["total_bills_audited"] == 1
     assert stats["anomalies_flagged"] == 1
+
+
+def test_candidate_promotion_gate_rejection(tmp_path):
+    """
+    Ensure automated gatekeeper rejects candidates failing acceptance criteria (F1 < 0.75 or F1 < Prod),
+    and active production model remains intact and operational.
+    """
+    reg_path = tmp_path / "test_reg_rejection.json"
+    registry = ModelRegistry(registry_file=str(reg_path))
+
+    # v1 starts as production with F1 = 0.85
+    prod_orig = registry.get_production_model()
+    assert prod_orig.version == 1
+
+    # Register candidate v2 with substandard F1 (0.62 < 0.75)
+    cand_low = registry.register_candidate(
+        model_name="Substandard_Model",
+        artifact_path="./models/substandard.pth",
+        metrics={"precision": 0.65, "recall": 0.60, "f1_score": 0.62},
+        description="Low quality model that must be rejected"
+    )
+    can_promote, reason = registry.evaluate_promotion_gate(candidate_version=cand_low.version)
+    assert can_promote is False
+    assert "Gate Failed" in reason
+
+    # Attempt promotion should fail
+    promoted, msg = registry.promote_candidate(candidate_version=cand_low.version)
+    assert promoted is False
+
+    # Production model must remain v1 unchanged
+    active_prod = registry.get_production_model()
+    assert active_prod.version == 1
+    assert active_prod.stage == "PRODUCTION"
+
+    # Candidate must still be in CANDIDATE stage
+    cand_rec = next(v for v in registry.versions if v.version == cand_low.version)
+    assert cand_rec.stage == "CANDIDATE"
+

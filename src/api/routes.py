@@ -158,6 +158,8 @@ def verify_bill(req: BillVerifyRequest):
         ml_predicted=is_ml_anom,
         feature_attributions=attributions,
         historical_mean_units=hist_mean,
+        previous_meter_reading=req.previous_meter_reading,
+        current_meter_reading=req.current_meter_reading,
     )
 
     # Generate formal representation letter text

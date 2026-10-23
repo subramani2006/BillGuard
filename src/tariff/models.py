@@ -35,14 +35,26 @@ class FppcaConfig(BaseModel):
 class TariffConfig(BaseModel):
     tariff_code: str
     tariff_name: str
+    tariff_category: str = "LT-1A Domestic"
     state: str = "Tamil Nadu"
     authority: str = "TNERC"
     order_reference: str
+    effective_start_date: Optional[str] = None
+    effective_end_date: Optional[str] = None
     verification_status: str = "VERIFIED_OFFICIAL"
     billing_cycle_days: int = 60
     billing_cycle_type: str = "bi-monthly"
     free_allowance_units: int = 100
     free_allowance_description: str = ""
+    subsidy_conditions: str = (
+        "First 100 units free per bi-monthly cycle subsidized by Government of Tamil Nadu "
+        "(G.O. Ms. No. 38, Energy Department). Applicable to single domestic connection per premises."
+    )
+    calculation_methodology: str = (
+        "TNERC progressive telescopic slab assessment. Gross energy charge minus GoTN tariff subsidy, "
+        "plus FPPCA fuel adjustment surcharge on billable units."
+    )
+    disclaimer: str = ""
     slabs: List[TariffSlab]
     fixed_charges: FixedChargesConfig
     electricity_tax: ElectricityTaxConfig
@@ -75,14 +87,26 @@ class BillInput(BaseModel):
     billed_fppca: Optional[float] = None
     billed_fixed_charges: Optional[float] = None
     arrears_amount: float = 0.0
+    additional_charges: float = 0.0
+    adjustments: float = 0.0
     tariff_code: Optional[str] = None
     proration_applied: bool = False
+    is_estimated_reading: bool = False
+    meter_replaced: bool = False
+    old_meter_final_reading: Optional[float] = None
+    new_meter_initial_reading: Optional[float] = 0.0
+    notes: Optional[str] = None
 
 
 class TariffCalculationResult(BaseModel):
     tariff_code: str
     tariff_name: str
+    tariff_category: str = "LT-1A Domestic"
     verification_status: str
+    is_valid: bool = True
+    validation_errors: List[str] = Field(default_factory=list)
+    validation_warnings: List[str] = Field(default_factory=list)
+    meter_status: str = "NORMAL"  # NORMAL, ROLLOVER, REPLACED, ESTIMATED, INVERTED, INVALID
     calculated_units: float
     billed_units: Optional[float] = None
     units_match: bool = True
@@ -100,9 +124,14 @@ class TariffCalculationResult(BaseModel):
     fppca_amount: float
     calculated_current_cycle_total: float
     arrears_amount: float
+    additional_charges: float = 0.0
+    adjustments: float = 0.0
     calculated_grand_total: float
     billed_amount: Optional[float] = None
     discrepancy_amount: Optional[float] = None
     is_arithmetic_exact_match: bool
-    discrepancy_category: str  # EXACT_MATCH, OVERBILLED, UNDERBILLED, METER_READING_MISMATCH, UNKNOWN
+    discrepancy_category: str  # EXACT_MATCH, OVERBILLED, UNDERBILLED, METER_READING_MISMATCH, UNKNOWN, INVALID_INPUT
+    effective_start_date: Optional[str] = None
+    effective_end_date: Optional[str] = None
+    disclaimer: str = ""
     metadata: Dict[str, Any] = Field(default_factory=dict)

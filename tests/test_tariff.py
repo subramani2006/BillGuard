@@ -113,3 +113,90 @@ def test_billing_cycle_proration_warning():
 
     is_normal, notes2 = evaluate_billing_cycle_duration(61, standard_days=60)
     assert is_normal is False
+
+
+def test_reversed_reading_dates(engine):
+    """Detect when reading dates are reversed (curr_date < prev_date)."""
+    b = BillInput(
+        consumer_number="01-100-005",
+        previous_reading_date="2024-08-15",
+        current_reading_date="2024-06-15",  # Reversed!
+        previous_meter_reading=1000.0,
+        current_meter_reading=1200.0,
+        tariff_code="TN_DOMESTIC_LT1A_2024",
+    )
+    res = engine.calculate_bill(b)
+    assert res.is_valid is False
+    assert any("reversed reading dates" in err.lower() for err in res.validation_errors)
+    assert res.discrepancy_category == "INVALID_INPUT"
+
+
+def test_negative_meter_reading(engine):
+    """Detect physically invalid negative meter reading."""
+    b = BillInput(
+        consumer_number="01-100-006",
+        previous_meter_reading=-50.0,
+        current_meter_reading=100.0,
+        tariff_code="TN_DOMESTIC_LT1A_2024",
+    )
+    res = engine.calculate_bill(b)
+    assert res.is_valid is False
+    assert any("negative" in err.lower() for err in res.validation_errors)
+
+
+def test_meter_replacement_handling(engine):
+    """Calculate units across physical meter replacement."""
+    b = BillInput(
+        consumer_number="01-100-007",
+        previous_meter_reading=4800.0,
+        current_meter_reading=120.0,  # New meter reading
+        meter_replaced=True,
+        old_meter_final_reading=5000.0,  # 200 units on old
+        new_meter_initial_reading=0.0,    # 120 units on new -> total 320 units
+        tariff_code="TN_DOMESTIC_LT1A_2024",
+    )
+    res = engine.calculate_bill(b)
+    assert res.is_valid is True
+    assert res.meter_status == "REPLACED"
+    assert res.calculated_units == 320.0
+    assert any("meter replacement" in w.lower() for w in res.validation_warnings)
+
+
+def test_estimated_reading_flag(engine):
+    """Audit bill marked as estimated/assessed reading."""
+    b = BillInput(
+        consumer_number="01-100-008",
+        previous_meter_reading=1000.0,
+        current_meter_reading=1250.0,
+        is_estimated_reading=True,
+        tariff_code="TN_DOMESTIC_LT1A_2024",
+    )
+    res = engine.calculate_bill(b)
+    assert res.is_valid is True
+    assert res.meter_status == "ESTIMATED"
+    assert any("estimated" in w.lower() for w in res.validation_warnings)
+
+
+def test_additional_charges_and_adjustments(engine):
+    """Ensure additional charges and adjustments are included in grand total calculation."""
+    b = BillInput(
+        consumer_number="01-100-009",
+        previous_meter_reading=1000.0,
+        current_meter_reading=1200.0,  # 200 units -> net 247.0 + fppca 32.0 = 279.0
+        additional_charges=50.0,
+        adjustments=20.0,
+        billed_amount=309.0,  # 279 + 50 - 20 = 309.0
+        tariff_code="TN_DOMESTIC_LT1A_2024",
+    )
+    res = engine.calculate_bill(b)
+    assert res.calculated_grand_total == 309.0
+    assert res.is_arithmetic_exact_match is True
+    assert res.discrepancy_category == "EXACT_MATCH"
+
+
+def test_simulated_tariff_disclaimer(engine):
+    """Verify that simulated tariffs explicitly show required disclaimer."""
+    sim_tariff = engine.get_tariff("SIMULATED_PROGRESSIVE_2025")
+    assert sim_tariff.verification_status != "VERIFIED_OFFICIAL"
+    assert "Simulation only — actual charges may differ. Verify the applicable official tariff." in sim_tariff.disclaimer
+

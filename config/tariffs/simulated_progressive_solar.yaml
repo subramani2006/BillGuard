@@ -1,13 +1,19 @@
 tariff_code: "SIMULATED_PROGRESSIVE_2025"
 tariff_name: "Simulated Smart Green Progressive Tariff (Experimental Model)"
+tariff_category: "LT-1A Domestic (Simulated)"
 state: "Tamil Nadu (Simulated)"
 authority: "Experimental / Simulated Rule"
 order_reference: "BillGuard Research Scenario v1"
+effective_start_date: "2025-01-01 (Simulated)"
+effective_end_date: "Experimental"
 verification_status: "SIMULATED_EXPERIMENTAL"
 billing_cycle_days: 60
 billing_cycle_type: "bi-monthly"
 free_allowance_units: 100
 free_allowance_description: "First 100 units free for basic lifeline domestic support"
+subsidy_conditions: "Simulated research policy. Basic lifeline units subsidized under experimental green development model."
+calculation_methodology: "Progressive tiered slab model with fixed infrastructure fee and 5% green cess for consumption exceeding 500 kWh."
+disclaimer: "Simulation only — actual charges may differ. Verify the applicable official tariff."
 
 slabs:
   - min_units: 0

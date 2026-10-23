@@ -69,3 +69,19 @@ def test_bill_image_generator_output():
     assert "consumer_number" in boxes
     assert "billed_amount" in boxes
     assert "billed_units" in boxes
+
+
+def test_historical_records_mathematical_consistency(bill_gen):
+    """Verify that every generated record satisfies discrepancy = billed_amount - calculated_grand_total."""
+    records = bill_gen.generate_consumer_history(
+        consumer_id="09-100-TEST",
+        archetype_key="MODERATE",
+        num_cycles=8,
+        anomaly_probability=0.35,
+    )
+    for r in records:
+        expected_disc = round(r["billed_amount"] - r["calculated_grand_total"], 2)
+        assert abs(r["discrepancy_amount"] - expected_disc) < 1e-5
+        assert r["current_reading_date"] > r["previous_reading_date"]
+        assert r["recorded_units"] >= 0.0
+

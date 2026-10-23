@@ -36,6 +36,20 @@ EXPLANATION_TEMPLATES_EN = {
         "ZERO CONSUMPTION ALERT: 0 units recorded for premises with historical active consumption ({hist_avg:.1f} units). "
         "Possible stuck mechanical register, blown meter fuse, or unoccupied premises."
     ),
+    "ARREARS_EXPLAINING_INCREASE": (
+        "ARREARS COMPONENT IDENTIFIED: The billed increase is explained by past unpaid dues or adjustments "
+        "of ₹{arrears_amount:.2f} appended to the bill, rather than an energy consumption surge or slab arithmetic error. "
+        "Current cycle energy charges are verified at ₹{cycle_total:.2f}."
+    ),
+    "POSSIBLE_TARIFF_MISMATCH": (
+        "TARIFF CATEGORY DISCREPANCY: The billed amount corresponds to a commercial or higher non-domestic tariff schedule "
+        "rather than standard domestic LT-1A rates. Verify whether your service connection is classified correctly in utility records."
+    ),
+    "INSUFFICIENT_INFORMATION": (
+        "INSUFFICIENT INFORMATION FOR DEFINITIVE AUDIT: One or more critical billing parameters "
+        "(such as meter readings or reading dates) are missing, inverted, or physically implausible. "
+        "Additional consumer records or physical meter inspection are required to complete the verification."
+    ),
     "NORMAL_VERIFIED": (
         "BILL VERIFIED NORMAL: Meter arithmetic and tariff calculations match statutory TNERC orders precisely. "
         "Consumption is within expected seasonal variance."
@@ -73,6 +87,18 @@ EXPLANATION_TEMPLATES_TA = {
     "DEAD_METER_ZERO": (
         "சுழி நுகர்வு எச்சரிக்கை: தொடர் பயன்பாட்டில் உள்ள இணைப்பிற்கு (சராசரி {hist_avg:.1f} அலகுகள்) 0 அலகுகள் "
         "பதிவாகியுள்ளது. மின்மானி இயங்காமல் நின்றுவிட்டதா அல்லது சுவிட்ச் கோளாறா என்பதைச் சரிபார்க்கவும்."
+    ),
+    "ARREARS_EXPLAINING_INCREASE": (
+        "நிலுவைத் தொகை காரணம்: கட்டண உயர்வுக்கு மின் பயன்பாடு காரணம் அல்ல; முந்தைய கட்டண நிலுவை அல்லது சரிசெய்தல் "
+        "தொகை ₹{arrears_amount:.2f} சேர்க்கப்பட்டுள்ளதே காரணமாகும். நடப்பு சுழற்சி கட்டணம் ₹{cycle_total:.2f} மட்டுமே."
+    ),
+    "POSSIBLE_TARIFF_MISMATCH": (
+        "கட்டணப் பிரிவு முரண்பாடு: ரசீதுத் தொகை வீட்டு உபயோக LT-1A கட்டணத்திற்குப் பதிலாக வணிக அல்லது பிற "
+        "கட்டணப் பிரிவின்படி கணக்கிடப்பட்டிருக்க வாய்ப்புள்ளது. மின்வாரிய பதிவேட்டை சரிபார்க்கவும்."
+    ),
+    "INSUFFICIENT_INFORMATION": (
+        "முடிவு செய்ய போதிய தகவல்கள் இல்லை: அளவீட்டு எண்கள் அல்லது தேதிகள் விடுபட்டுள்ளன அல்லது முரணாக உள்ளன. "
+        "சரிபார்ப்பை முடிக்க கூடுதல் ஆவணங்கள் அல்லது நேரடி ஆய்வு தேவை."
     ),
     "NORMAL_VERIFIED": (
         "ரசீது சரிபார்க்கப்பட்டது (சரியானது): மின்மானி அளவீடுகள் மற்றும் தமிழ்நாடு மின்சார ஒழுங்குமுறை ஆணையத்தின் "

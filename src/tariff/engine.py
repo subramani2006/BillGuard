@@ -23,6 +23,7 @@ from .rules import (
     calculate_billing_days,
     check_meter_reading_validity,
     evaluate_billing_cycle_duration,
+    validate_bill_parameters,
 )
 
 
@@ -44,8 +45,6 @@ class TariffEngine:
             return yaml.safe_load(content)
 
         # Basic fallback parser if pyyaml is not yet loaded
-        # Since our tariff yaml files are well-structured, we can parse standard key-values
-        import re
         result = {}
         current_section = None
         current_list = None
@@ -127,17 +126,34 @@ class TariffEngine:
                 tax = ElectricityTaxConfig(**data.get("electricity_tax", {}))
                 fppca = FppcaConfig(**data.get("fppca", {}))
 
+                status = data.get("verification_status", "VERIFIED_OFFICIAL")
+                disclaimer = data.get("disclaimer", "")
+                if status != "VERIFIED_OFFICIAL" and not disclaimer:
+                    disclaimer = "Simulation only — actual charges may differ. Verify the applicable official tariff."
+
                 cfg = TariffConfig(
                     tariff_code=data["tariff_code"],
                     tariff_name=data["tariff_name"],
+                    tariff_category=data.get("tariff_category", "LT-1A Domestic"),
                     state=data.get("state", "Tamil Nadu"),
                     authority=data.get("authority", "TNERC"),
                     order_reference=data.get("order_reference", ""),
-                    verification_status=data.get("verification_status", "VERIFIED_OFFICIAL"),
+                    effective_start_date=data.get("effective_start_date"),
+                    effective_end_date=data.get("effective_end_date"),
+                    verification_status=status,
                     billing_cycle_days=data.get("billing_cycle_days", 60),
                     billing_cycle_type=data.get("billing_cycle_type", "bi-monthly"),
                     free_allowance_units=data.get("free_allowance_units", 100),
                     free_allowance_description=data.get("free_allowance_description", ""),
+                    subsidy_conditions=data.get("subsidy_conditions", (
+                        "First 100 units free per bi-monthly cycle for domestic consumers subsidized by GoTN "
+                        "(G.O. Ms. No. 38, Energy Department). Single connection per premises."
+                    )),
+                    calculation_methodology=data.get("calculation_methodology", (
+                        "TNERC progressive telescopic slab assessment. Gross energy charge minus GoTN tariff subsidy, "
+                        "plus FPPCA fuel adjustment surcharge on billable units."
+                    )),
+                    disclaimer=disclaimer,
                     slabs=slabs,
                     fixed_charges=fixed,
                     electricity_tax=tax,
@@ -153,8 +169,12 @@ class TariffEngine:
             {
                 "tariff_code": t.tariff_code,
                 "tariff_name": t.tariff_name,
+                "tariff_category": t.tariff_category,
                 "verification_status": t.verification_status,
                 "authority": t.authority,
+                "effective_start_date": t.effective_start_date or "N/A",
+                "effective_end_date": t.effective_end_date or "Present",
+                "disclaimer": t.disclaimer,
             }
             for t in self._tariffs.values()
         ]
@@ -183,10 +203,28 @@ class TariffEngine:
     ) -> TariffCalculationResult:
         """
         Perform complete deterministic verification of a domestic electricity bill.
+        Enforces input validation, rollover/replacement detection, slab subsidy audit,
+        and consistent discrepancy calculations:
+        discrepancy = billed_amount - independently_calculated_amount
         """
         tariff = self.get_tariff(tariff_code or bill_input.tariff_code)
 
-        # 1. Billing period
+        # 1. Comprehensive input validation
+        is_valid_input, validated_units, meter_status, val_errors, val_warnings = validate_bill_parameters(
+            prev_reading=bill_input.previous_meter_reading,
+            curr_reading=bill_input.current_meter_reading,
+            prev_date_str=bill_input.previous_reading_date,
+            curr_date_str=bill_input.current_reading_date,
+            billed_units=bill_input.billed_units,
+            billed_amount=bill_input.billed_amount,
+            meter_constant=bill_input.meter_constant,
+            meter_replaced=bill_input.meter_replaced,
+            old_meter_final=bill_input.old_meter_final_reading,
+            new_meter_initial=bill_input.new_meter_initial_reading,
+            is_estimated=bill_input.is_estimated_reading,
+        )
+
+        # 2. Billing period
         billing_days = calculate_billing_days(
             bill_input.previous_reading_date,
             bill_input.current_reading_date
@@ -196,12 +234,16 @@ class TariffEngine:
             standard_days=tariff.billing_cycle_days
         )
 
-        # 2. Meter reading check
-        is_valid_meter, calc_units, meter_note = check_meter_reading_validity(
+        # 3. Reading validity compatibility
+        _, calc_units, meter_note = check_meter_reading_validity(
             prev_reading=bill_input.previous_meter_reading,
             curr_reading=bill_input.current_meter_reading,
             meter_constant=bill_input.meter_constant
         )
+        if not is_valid_input and validated_units == 0.0 and calc_units > 0.0:
+            calc_units = 0.0
+        elif is_valid_input:
+            calc_units = validated_units
 
         # Billed units check
         billed_units = bill_input.billed_units
@@ -213,7 +255,7 @@ class TariffEngine:
             units_discrepancy = round(billed_units - calc_units, 2)
             units_match = abs(units_discrepancy) <= 0.5
 
-        # 3. Slab calculation
+        # 4. Slab calculation
         units_to_calculate = billed_units if units_match else calc_units
         units_to_calculate = max(0.0, units_to_calculate)
 
@@ -263,35 +305,42 @@ class TariffEngine:
                 )
             )
 
-        # 4. Fixed charges
+        # 5. Fixed charges
         fixed_charge = tariff.fixed_charges.amount_per_cycle if tariff.fixed_charges.enabled else 0.0
         if bill_input.billed_fixed_charges is not None:
             fixed_charge = bill_input.billed_fixed_charges
 
-        # 5. Electricity Tax
+        # 6. Electricity Tax
         electricity_tax = 0.0
         if tariff.electricity_tax.enabled and units_to_calculate >= tariff.electricity_tax.threshold_units:
             electricity_tax = round((net_total * tariff.electricity_tax.rate_percentage) / 100.0, 2)
 
-        # 6. FPPCA (Fuel Surcharge)
+        # 7. FPPCA (Fuel Surcharge)
         fppca_amount = 0.0
         if tariff.fppca.enabled:
-            # FPPCA applies to net billable units above free quota (or total units depending on regulatory order)
+            # FPPCA applies to net billable units above free quota
             billable_units = max(0.0, units_to_calculate - tariff.free_allowance_units)
             fppca_amount = round(billable_units * tariff.fppca.rate_per_unit, 2)
         if bill_input.billed_fppca is not None:
             fppca_amount = bill_input.billed_fppca
 
-        # 7. Grand totals
+        # 8. Grand totals with arrears, adjustments, and additional charges
         current_cycle_total = round(net_total + fixed_charge + electricity_tax + fppca_amount, 2)
-        grand_total = round(current_cycle_total + bill_input.arrears_amount, 2)
+        grand_total = round(
+            current_cycle_total + bill_input.arrears_amount + bill_input.additional_charges - bill_input.adjustments,
+            2
+        )
 
-        # 8. Comparison with billed amount
+        # 9. Deterministic discrepancy calculation:
+        # discrepancy = billed_amount - independently_calculated_amount
         discrepancy = None
         exact_match = False
         discrepancy_category = "UNKNOWN"
 
-        if bill_input.billed_amount is not None:
+        if not is_valid_input:
+            discrepancy_category = "INVALID_INPUT"
+            exact_match = False
+        elif bill_input.billed_amount is not None:
             discrepancy = round(bill_input.billed_amount - grand_total, 2)
             if not units_match:
                 discrepancy_category = "METER_READING_MISMATCH"
@@ -315,12 +364,18 @@ class TariffEngine:
             "proration_factor": proration_factor,
             "order_reference": tariff.order_reference,
             "free_allowance_units": tariff.free_allowance_units,
+            "meter_status": meter_status,
         }
 
         return TariffCalculationResult(
             tariff_code=tariff.tariff_code,
             tariff_name=tariff.tariff_name,
+            tariff_category=tariff.tariff_category,
             verification_status=tariff.verification_status,
+            is_valid=is_valid_input,
+            validation_errors=val_errors,
+            validation_warnings=val_warnings,
+            meter_status=meter_status,
             calculated_units=calc_units,
             billed_units=billed_units,
             units_match=units_match,
@@ -338,10 +393,15 @@ class TariffEngine:
             fppca_amount=round(fppca_amount, 2),
             calculated_current_cycle_total=current_cycle_total,
             arrears_amount=round(bill_input.arrears_amount, 2),
+            additional_charges=round(bill_input.additional_charges, 2),
+            adjustments=round(bill_input.adjustments, 2),
             calculated_grand_total=grand_total,
             billed_amount=bill_input.billed_amount,
             discrepancy_amount=discrepancy,
             is_arithmetic_exact_match=exact_match,
             discrepancy_category=discrepancy_category,
+            effective_start_date=tariff.effective_start_date,
+            effective_end_date=tariff.effective_end_date,
+            disclaimer=tariff.disclaimer,
             metadata=metadata,
         )

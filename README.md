@@ -5,7 +5,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.25%2B-FF4B4B.svg)](https://streamlit.io/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-Scratch--Trained-EE4C2C.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI Tests](https://img.shields.io/badge/Tests-34%20Passed-brightgreen.svg)]()
+[![CI Tests](https://img.shields.io/badge/Tests-42%20Passed-brightgreen.svg)]()
 
 > **Final-Year Engineering Capstone Project**  
 > An explainable, full-stack, production-grade electricity bill verification and anomaly detection system designed for Indian domestic consumers. Initially supporting Tamil Nadu (TANGEDCO / TNERC LT-1A tariff) through a versioned tariff engine, from-scratch deep learning OCR, unsupervised anomaly detection, bilingual reasoning in English and Tamil (தமிழ்), and an end-to-end MLOps lifecycle.
@@ -235,13 +235,14 @@ docker-compose -f docker/docker-compose.yml up --build
 
 | Stage | Module | Tests | Status | Key Coverage |
 |---|---|---|---|---|
-| **Stage 1** | Tariff Engine | 7 | `PASSED` | 100-unit free subsidy, tiered slabs, overcharge, rollover, proration |
-| **Stage 2** | Synthetic Data | 4 | `PASSED` | Consumer archetypes, summer AC surge, zero cross-set leakage |
+| **Stage 1** | Tariff Engine | 13 | `PASSED` | 100-unit free subsidy, tiered slabs, overcharge, rollover, reversed dates, negative readings, meter replacement, estimated readings, proration, simulation disclaimer |
+| **Stage 2** | Synthetic Data | 5 | `PASSED` | Consumer archetypes, summer AC surge, zero cross-set leakage, longitudinal mathematical integrity |
 | **Stage 3** | From-Scratch OCR | 4 | `PASSED` | CRNN forward shape, CTC tokenizer, CER/WER metrics, manual fallback |
 | **Stage 4** | ML Anomaly Models | 4 | `PASSED` | 8-feature extraction, 3-sigma baseline, Isolation Forest, Autoencoder |
-| **Stage 5** | Explanation & Grievance | 4 | `PASSED` | Bilingual synthesis, certainty grading, ReportLab PDF petition |
-| **Stage 6** | MLOps & Governance | 5 | `PASSED` | PSI drift calculation, KS-test, safety gate promotion, rollback, SQLite audit |
+| **Stage 5** | Explanation & Grievance | 4 | `PASSED` | Bilingual synthesis, 3 standard outcomes, certainty grading, ReportLab PDF petition |
+| **Stage 6** | MLOps & Governance | 6 | `PASSED` | PSI drift calculation, KS-test, safety gate promotion, candidate rejection, rollback, SQLite audit |
 | **Stage 7** | FastAPI Integration | 6 | `PASSED` | Health, tariffs, verify-bill, OCR image upload, drift report, registry |
+| **Total** | **All Modules** | **42** | `PASSED` | **100% Suite Pass Rate with Zero Regressions** |
 
 ---
 

@@ -92,6 +92,8 @@ class BillOcrExtractor:
         crop_images = {}
         low_confidence_fields = []
 
+        unreadable_fields = []
+
         for field_name, (x1, y1, x2, y2) in rois.items():
             crop = image.crop((x1, y1, x2, y2))
             crop_images[field_name] = crop
@@ -102,7 +104,11 @@ class BillOcrExtractor:
             extracted_fields[field_name] = clean_val
             field_confidences[field_name] = conf
 
-            if conf < self.confidence_threshold:
+            if clean_val is None or clean_val == "":
+                unreadable_fields.append(field_name)
+                if field_name not in low_confidence_fields:
+                    low_confidence_fields.append(field_name)
+            elif conf < self.confidence_threshold:
                 low_confidence_fields.append(field_name)
 
         needs_manual = len(low_confidence_fields) > 0
@@ -112,12 +118,19 @@ class BillOcrExtractor:
             "confidences": field_confidences,
             "crop_images": crop_images,
             "low_confidence_fields": low_confidence_fields,
+            "unreadable_fields": unreadable_fields,
             "needs_manual_verification": needs_manual,
             "model_is_trained_from_scratch": True,
+            "synthetic_training_limitations_notice": (
+                "Notice: This CRNN OCR model is trained strictly from scratch on locally generated synthetic "
+                "bill crops (random weights initialization, no pretrained backbones). In real-world conditions, "
+                "camera glare, creases, low illumination, or non-standard fonts may reduce character recognition "
+                "confidence. All low-confidence or unreadable fields must be confirmed manually by the consumer."
+            ),
         }
 
     def _post_process_field(self, field_name: str, raw_text: str) -> Any:
-        """Sanitize and parse OCR predictions into appropriate data types."""
+        """Sanitize and parse OCR predictions into appropriate data types. Never guess unreadable values."""
         raw_upper = raw_text.upper().replace("INR", "").replace("RS", "").strip()
 
         if "reading" in field_name or "units" in field_name or "amount" in field_name:
@@ -127,14 +140,14 @@ class BillOcrExtractor:
                 try:
                     return float(digits[0])
                 except ValueError:
-                    return 0.0
-            return 0.0
+                    return None
+            return None
 
         if "date" in field_name:
             # Look for date pattern YYYY-MM-DD or DD-MM-YYYY
             date_matches = re.findall(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{4}", raw_upper)
             if date_matches:
                 return date_matches[0].replace("/", "-")
-            return "2024-08-01"
+            return None
 
-        return raw_upper if raw_upper else "UNKNOWN"
+        return raw_upper if raw_upper else None

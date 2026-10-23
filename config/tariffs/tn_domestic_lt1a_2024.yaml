@@ -1,13 +1,19 @@
 tariff_code: "TN_DOMESTIC_LT1A_2024"
 tariff_name: "TANGEDCO Low Tension Tariff I-A (Domestic) - July 2024 Revision"
+tariff_category: "LT-1A Domestic"
 state: "Tamil Nadu"
 authority: "Tamil Nadu Electricity Regulatory Commission (TNERC)"
-order_reference: "TNERC Annual Tariff Revision Order, Effective 01-Jul-2024"
+order_reference: "TNERC Comprehensive Tariff Order & Escalation Notice, Effective 01-Jul-2024"
+effective_start_date: "2024-07-01"
+effective_end_date: "Present"
 verification_status: "VERIFIED_OFFICIAL"
 billing_cycle_days: 60
 billing_cycle_type: "bi-monthly"
 free_allowance_units: 100
 free_allowance_description: "First 100 units free for all domestic consumers subsidized by GoTN"
+subsidy_conditions: "First 100 units free per bi-monthly cycle for domestic consumers under GoTN subsidy (G.O. Ms. No. 38, Energy Department). Applicable to single domestic service connection per premises."
+calculation_methodology: "TNERC multi-tier progressive telescopic slab structure: 0-100 units (100% GoTN subsidy, ₹0 net), 101-200 units (50% GoTN subsidy, ₹2.47 net), 201-400 (₹4.93 net), 401-500 (₹6.60 net), 501-600 (₹8.80 net), 601-800 (₹9.90 net), 801-1000 (₹11.00 net), above 1000 (₹12.10 net). FPPCA of ₹0.32/kWh on billable units above free quota."
+disclaimer: "Official statutory tariff verified against TNERC and TANGEDCO/TNPDCL orders."
 
 slabs:
   - min_units: 0

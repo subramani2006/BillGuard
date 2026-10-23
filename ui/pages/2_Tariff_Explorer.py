@@ -17,11 +17,30 @@ def get_engine():
 engine = get_engine()
 
 st.title("⚡ Tamil Nadu Tariff Explorer & Simulator")
-st.markdown("Explore official Tamil Nadu Electricity Regulatory Commission (TNERC) domestic tariff structures, government subsidies, and simulate the mathematical impact of delayed billing cycles.")
+st.markdown(
+    "Explore official statutory Tamil Nadu Electricity Regulatory Commission (TNERC) domestic tariff schedules, "
+    "Government of Tamil Nadu (GoTN) 100-unit lifeline subsidies, and simulate the mathematical impact of delayed billing cycles. "
+    "Strictly separates verified statutory tariffs from experimental research models."
+)
 
 tariffs = engine.list_available_tariffs()
-tariff_map = {t["tariff_code"]: t for t in tariffs}
+official_tariffs = [t for t in tariffs if t.get("verification_status") == "VERIFIED_OFFICIAL"]
+simulated_tariffs = [t for t in tariffs if t.get("verification_status") != "VERIFIED_OFFICIAL"]
 
+# Grouped selection
+st.markdown("### 🏛️ Select Tariff Configuration")
+tariff_type = st.radio(
+    "Tariff Source Category",
+    ["Verified Official Statutory Tariffs (TNERC)", "Simulated / Experimental Research Tariffs"],
+    horizontal=True
+)
+
+if "Verified" in tariff_type:
+    available_subset = official_tariffs
+else:
+    available_subset = simulated_tariffs
+
+tariff_map = {t["tariff_code"]: t for t in available_subset}
 selected_code = st.selectbox(
     "Select Tariff Version to Inspect",
     list(tariff_map.keys()),
@@ -30,14 +49,37 @@ selected_code = st.selectbox(
 
 tariff_cfg = engine.get_tariff(selected_code)
 
-# Metadata card
+# Mandatory simulation banner if tariff is not official
+if tariff_cfg.verification_status != "VERIFIED_OFFICIAL":
+    st.warning("⚠️ **Simulation only — actual charges may differ. Verify the applicable official tariff.**")
+    st.caption("Never describe an unverified calculation as a statutory or official bill result.")
+else:
+    st.success("✅ **Official Statutory Tariff**: Verified against official TNERC tariff orders and Gazette notifications.")
+
+# Comprehensive Metadata Cards
 col_m1, col_m2, col_m3 = st.columns(3)
 with col_m1:
-    st.info(f"**Authority:** {tariff_cfg.authority}\n\n**State:** {tariff_cfg.state}")
+    st.info(
+        f"**Category:** {tariff_cfg.tariff_category}\n\n"
+        f"**State & Authority:** {tariff_cfg.state} | {tariff_cfg.authority}"
+    )
 with col_m2:
-    st.info(f"**Regulatory Order:** {tariff_cfg.order_reference}\n\n**Status:** `{tariff_cfg.verification_status}`")
+    st.info(
+        f"**Statutory Order:** {tariff_cfg.order_reference}\n\n"
+        f"**Effective Dates:** {tariff_cfg.effective_start_date or 'N/A'} to {tariff_cfg.effective_end_date or 'Present'}"
+    )
 with col_m3:
-    st.info(f"**Standard Cycle:** {tariff_cfg.billing_cycle_days} Days ({tariff_cfg.billing_cycle_type})\n\n**Free Allowance:** {tariff_cfg.free_allowance_units} Units")
+    st.info(
+        f"**Billing Cycle:** {tariff_cfg.billing_cycle_days} Days ({tariff_cfg.billing_cycle_type})\n\n"
+        f"**Lifeline Allowance:** {tariff_cfg.free_allowance_units} Units Free"
+    )
+
+# Policy & Calculation Methodology Card
+with st.expander("📜 Subsidy Eligibility & Calculation Methodology", expanded=True):
+    st.markdown(f"**Subsidy Eligibility & Conditions:**\n{tariff_cfg.subsidy_conditions}")
+    st.markdown(f"**Calculation Methodology:**\n{tariff_cfg.calculation_methodology}")
+    if tariff_cfg.fppca.enabled:
+        st.markdown(f"**FPPCA Fuel Adjustment:** ₹{tariff_cfg.fppca.rate_per_unit:.2f}/kWh ({tariff_cfg.fppca.description})")
 
 st.markdown("### 📋 Versioned Slab Structure")
 slabs_data = []
@@ -50,11 +92,11 @@ for s in tariff_cfg.slabs:
         "Net Consumer Rate (₹/kWh)": f"₹{s.net_rate:.2f}",
         "Description": s.description,
     })
-st.dataframe(pd.DataFrame(slabs_data), hide_index=True)
+st.dataframe(pd.DataFrame(slabs_data), hide_index=True, use_container_width=True)
 
 st.markdown("---")
 st.markdown("### 🧮 Interactive Tariff & Billing Cycle Delay Simulator")
-st.caption("Delayed meter reading is one of the most common consumer grievances in Tamil Nadu. Simulate how extended billing periods artificially jump slabs without proration.")
+st.caption("Delayed meter reading is one of the most common domestic consumer grievances in Tamil Nadu. Simulate how extended billing periods artificially push consumption into higher slabs without proration.")
 
 col_s1, col_s2 = st.columns(2)
 with col_s1:
@@ -94,6 +136,9 @@ with col_r4:
 
 # Chart of bill progression
 st.markdown("### 📈 Cost Curve Progression Across Consumption")
+if tariff_cfg.verification_status != "VERIFIED_OFFICIAL":
+    st.caption("⚠️ *Simulation only — actual charges may differ. Verify the applicable official tariff.*")
+
 curve_units = list(range(0, 1001, 25))
 curve_costs = []
 for u in curve_units:

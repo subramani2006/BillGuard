@@ -54,14 +54,17 @@ Respected Sir / Madam,
 I am a domestic consumer holding Low Tension (LT) Service Connection Number {consumer_number} under your jurisdiction. I am writing to respectfully bring to your notice a calculation/recording discrepancy identified upon mathematical verification of my latest electricity bill card.
 
 1. EXECUTIVE SUMMARY OF DISPUTE:
-Status: {explanation.category.replace('_', ' ')}
+Outcome: {explanation.outcome}
+Finding: {explanation.finding_title}
 Verification Certainty: {explanation.certainty_level}
 Summary: {explanation.english_summary}
 
 2. AUDIT VERIFICATION DATA TABLE:
-- Previous Reading Date: {tariff_result.billing_days} days cycle
-- Previous Meter Reading: {tariff_result.calculated_units} units calculated
-- Billed Units: {tariff_result.billed_units} kWh
+- Previous Meter Reading: {explanation.previous_meter_reading:.1f}
+- Current Meter Reading: {explanation.current_meter_reading:.1f}
+- Billing Days: {tariff_result.billing_days} days
+- Calculated Units: {tariff_result.calculated_units:.1f} kWh
+- Billed Units: {tariff_result.billed_units if tariff_result.billed_units is not None else 'N/A'} kWh
 - Statutory Net Energy Charge: ₹{tariff_result.energy_charge_net:.2f}
 - Government of Tamil Nadu Subsidy Applied: ₹{tariff_result.subsidy_amount:.2f} (100 units free)
 - Fuel Surcharge (FPPCA): ₹{tariff_result.fppca_amount:.2f}
@@ -134,7 +137,7 @@ Consumer No: {consumer_number}
         meta_data = [
             [Paragraph("<b>Date:</b>", body_style), Paragraph(today, body_style), Paragraph("<b>To:</b>", body_style), Paragraph(f"Assistant Executive Engineer, TANGEDCO<br/>Section: {section_office}", body_style)],
             [Paragraph("<b>Consumer Name:</b>", body_style), Paragraph(consumer_name, body_style), Paragraph("<b>Service No:</b>", body_style), Paragraph(consumer_number, body_style)],
-            [Paragraph("<b>Tariff Category:</b>", body_style), Paragraph("Domestic (LT Tariff I-A)", body_style), Paragraph("<b>Status:</b>", body_style), Paragraph(f"<b>{explanation.category}</b>", body_style)],
+            [Paragraph("<b>Tariff Category:</b>", body_style), Paragraph("Domestic (LT Tariff I-A)", body_style), Paragraph("<b>Outcome:</b>", body_style), Paragraph(f"<b>{explanation.finding_title}</b>", body_style)],
         ]
         meta_table = Table(meta_data, colWidths=[90, 160, 80, 210])
         meta_table.setStyle(TableStyle([

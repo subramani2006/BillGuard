@@ -40,3 +40,31 @@ def get_certainty_badge(level: str) -> str:
     }
     bg, label = color_map.get(level, ("#6B7280", level))
     return f'<span style="background-color: {bg}; color: white; padding: 3px 10px; border-radius: 6px; font-size: 12px;">{label}</span>'
+
+
+def get_outcome_badge(outcome: str) -> str:
+    """Return colored badge for the 3 standard investigation outcomes."""
+    if "A." in outcome or "arithmetic discrepancy" in outcome.lower():
+        bg = "#DC2626"
+        icon = "🚨"
+    elif "B." in outcome or "investigation" in outcome.lower():
+        bg = "#D97706"
+        icon = "🔍"
+    else:
+        bg = "#16A34A"
+        icon = "✅"
+    return f'<span style="background-color: {bg}; color: white; padding: 6px 14px; border-radius: 9999px; font-weight: 700; font-size: 14px;">{icon} {outcome}</span>'
+
+
+def get_check_status_badge(status: str) -> str:
+    """Return badge for audit check statuses."""
+    s = status.upper()
+    if s == "PASSED":
+        return '<span style="background-color: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">✅ PASSED</span>'
+    elif s == "FAILED":
+        return '<span style="background-color: #FEE2E2; color: #991B1B; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">❌ FAILED</span>'
+    elif s == "WARNING":
+        return '<span style="background-color: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">⚠️ WARNING</span>'
+    else:
+        return '<span style="background-color: #F1F5F9; color: #475569; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">⚪ NOT PERFORMED</span>'
+
