@@ -185,17 +185,45 @@ with tab_gov:
         col_g1, col_g2, col_g3 = st.columns(3)
         with col_g1:
             pass_f1 = c_f1 >= 0.75
-            st.markdown(f"**Gate 1: Minimum F1 Threshold (≥ 0.75)**<br/><span class='metric-badge {'badge-pass' if pass_f1 else 'badge-fail'}'>{'PASS: ' if pass_f1 else 'FAIL: '}{c_f1:.3f}</span>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="glass-card" style="padding: 14px; text-align: center;">
+                <div class="card-label">Gate 1: Min F1 (≥ 0.75)</div>
+                <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_f1 else 'badge-fail'}'>{'✅ PASS: ' if pass_f1 else '❌ FAIL: '}{c_f1:.3f}</span></div>
+            </div>
+            """, unsafe_allow_html=True)
         with col_g2:
             pass_prec = c_prec >= 0.70
-            st.markdown(f"**Gate 2: Precision Threshold (≥ 0.70)**<br/><span class='metric-badge {'badge-pass' if pass_prec else 'badge-fail'}'>{'PASS: ' if pass_prec else 'FAIL: '}{c_prec:.3f}</span>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="glass-card" style="padding: 14px; text-align: center;">
+                <div class="card-label">Gate 2: Precision (≥ 0.70)</div>
+                <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_prec else 'badge-fail'}'>{'✅ PASS: ' if pass_prec else '❌ FAIL: '}{c_prec:.3f}</span></div>
+            </div>
+            """, unsafe_allow_html=True)
         with col_g3:
             pass_comp = c_f1 >= p_f1
-            st.markdown(f"**Gate 3: Exceeds Production F1 ({p_f1:.3f})**<br/><span class='metric-badge {'badge-pass' if pass_comp else 'badge-fail'}'>{'PASS: ' if pass_comp else 'FAIL: '}{c_f1:.3f} ≥ {p_f1:.3f}</span>", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="glass-card" style="padding: 14px; text-align: center;">
+                <div class="card-label">Gate 3: Exceeds Prod F1 ({p_f1:.3f})</div>
+                <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_comp else 'badge-fail'}'>{'✅ PASS: ' if pass_comp else '❌ FAIL: '}{c_f1:.3f} ≥ {p_f1:.3f}</span></div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br/>", unsafe_allow_html=True)
 
         if can_promote:
-            st.success(f"🎉 **{reason}**")
-            if st.button(f"Promote Candidate v{cand_ver} to PRODUCTION", type="primary", use_container_width=True):
+            st.markdown(f"""
+            <div class="glass-card" style="border: 1.5px solid #10B981; background: rgba(16, 185, 129, 0.12); margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 1.8rem;">🎉</div>
+                    <div>
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #34D399;">Promotion Safety Gate Certified: All Criteria Satisfied</div>
+                        <div style="font-size: 0.9rem; color: #CBD5E1; margin-top: 2px;">{reason}</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if st.button(f"🚀 Promote Certified Candidate v{cand_ver} to PRODUCTION", type="primary", use_container_width=True):
                 success, p_msg = registry.promote_candidate(cand_ver)
                 if success:
                     st.success(f"✅ {p_msg}")
@@ -203,7 +231,20 @@ with tab_gov:
                 else:
                     st.error(p_msg)
         else:
-            st.error(f"❌ **{reason}**")
+            st.markdown(f"""
+            <div class="glass-card" style="border: 1.5px solid #F59E0B; background: rgba(245, 158, 11, 0.12); margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 1.8rem;">🛡️</div>
+                    <div>
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #FBBF24;">MLOps Zero-Regression Guardrail: Promotion Intercepted</div>
+                        <div style="font-size: 0.9rem; color: #CBD5E1; margin-top: 2px;">
+                            <b>Safety Intercept:</b> {reason}<br/>
+                            <i>Automated governance ensures models with lower accuracy cannot degrade active production inference.</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 
 # ==============================================================================
