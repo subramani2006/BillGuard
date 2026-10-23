@@ -27,6 +27,7 @@ mlruns/
 mlflow.db
 data/billguard_audit.db
 data/temp_*.pdf
+data/ocr_synth/
 
 # Secrets, local environment & credentials
 .env
