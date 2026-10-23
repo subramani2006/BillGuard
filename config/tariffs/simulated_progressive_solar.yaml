@@ -1,0 +1,52 @@
+tariff_code: "SIMULATED_PROGRESSIVE_2025"
+tariff_name: "Simulated Smart Green Progressive Tariff (Experimental Model)"
+state: "Tamil Nadu (Simulated)"
+authority: "Experimental / Simulated Rule"
+order_reference: "BillGuard Research Scenario v1"
+verification_status: "SIMULATED_EXPERIMENTAL"
+billing_cycle_days: 60
+billing_cycle_type: "bi-monthly"
+free_allowance_units: 100
+free_allowance_description: "First 100 units free for basic lifeline domestic support"
+
+slabs:
+  - min_units: 0
+    max_units: 100
+    rate_per_unit: 5.00
+    subsidy_per_unit: 5.00
+    net_rate: 0.00
+    description: "0 to 100 units (100% Lifeline Subsidy)"
+  - min_units: 101
+    max_units: 250
+    rate_per_unit: 5.00
+    subsidy_per_unit: 2.00
+    net_rate: 3.00
+    description: "101 to 250 units (Standard Consumption)"
+  - min_units: 251
+    max_units: 500
+    rate_per_unit: 6.50
+    subsidy_per_unit: 0.00
+    net_rate: 6.50
+    description: "251 to 500 units"
+  - min_units: 501
+    max_units: null
+    rate_per_unit: 10.00
+    subsidy_per_unit: 0.00
+    net_rate: 10.00
+    description: "Above 500 units (High Consumption Slab)"
+
+fixed_charges:
+  enabled: true
+  amount_per_cycle: 50.00
+  notes: "Simulated fixed meter infrastructure maintenance charge"
+
+electricity_tax:
+  enabled: true
+  rate_percentage: 5.0
+  threshold_units: 500
+  notes: "5% green energy cess applied on units exceeding 500"
+
+fppca:
+  enabled: true
+  rate_per_unit: 0.35
+  description: "Simulated fuel adjustment charge"

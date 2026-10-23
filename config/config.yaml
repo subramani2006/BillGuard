@@ -1,0 +1,61 @@
+app:
+  name: "BillGuard"
+  version: "1.0.0"
+  description: "Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System"
+  default_tariff: "TN_DOMESTIC_LT1A_2024"
+  currency: "INR"
+  currency_symbol: "₹"
+  log_level: "INFO"
+
+storage:
+  database_url: "sqlite:///./billguard.db"
+  audit_log_path: "./data/audit_logs.jsonl"
+  synthetic_data_dir: "./data/synthetic"
+  sample_bills_dir: "./data/sample_bills"
+  ocr_synth_dir: "./data/ocr_synth"
+  models_dir: "./models"
+
+tariff:
+  config_dir: "./config/tariffs"
+  standard_cycle_days: 60
+  proration_warning_threshold_days: 5  # Flag if cycle differs by >5 days from 60
+
+ocr:
+  vocab: "0123456789.,-/: ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  img_height: 32
+  img_width: 256
+  confidence_threshold: 0.70
+  epochs: 10
+  batch_size: 16
+  learning_rate: 0.001
+  model_save_path: "./models/ocr_crnn_scratch.pth"
+
+ml:
+  random_seed: 42
+  contamination_rate: 0.08
+  isolation_forest:
+    n_estimators: 100
+    model_save_path: "./models/isolation_forest.joblib"
+  autoencoder:
+    input_dim: 8
+    hidden_dims: [16, 8, 4, 8, 16]
+    epochs: 25
+    batch_size: 32
+    learning_rate: 0.005
+    model_save_path: "./models/autoencoder_scratch.pth"
+  baseline:
+    z_score_threshold: 2.5
+    pct_increase_threshold: 0.50
+
+mlops:
+  mlflow_tracking_uri: "sqlite:///./mlflow.db"
+  experiment_name: "BillGuard_Anomaly_Detection"
+  model_registry_path: "./models/registry.json"
+  drift:
+    psi_threshold_warning: 0.10
+    psi_threshold_critical: 0.25
+    ks_pvalue_threshold: 0.05
+  promotion_gate:
+    min_f1_score: 0.80
+    max_false_positive_rate: 0.12
+    require_better_than_production: true

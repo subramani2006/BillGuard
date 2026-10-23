@@ -1,0 +1,76 @@
+tariff_code: "TN_DOMESTIC_LT1A_2024"
+tariff_name: "TANGEDCO Low Tension Tariff I-A (Domestic) - July 2024 Revision"
+state: "Tamil Nadu"
+authority: "Tamil Nadu Electricity Regulatory Commission (TNERC)"
+order_reference: "TNERC Annual Tariff Revision Order, Effective 01-Jul-2024"
+verification_status: "VERIFIED_OFFICIAL"
+billing_cycle_days: 60
+billing_cycle_type: "bi-monthly"
+free_allowance_units: 100
+free_allowance_description: "First 100 units free for all domestic consumers subsidized by GoTN"
+
+slabs:
+  - min_units: 0
+    max_units: 100
+    rate_per_unit: 4.93
+    subsidy_per_unit: 4.93
+    net_rate: 0.00
+    description: "0 to 100 units (100% GoTN Subsidy)"
+  - min_units: 101
+    max_units: 200
+    rate_per_unit: 4.93
+    subsidy_per_unit: 2.46
+    net_rate: 2.47
+    description: "101 to 200 units (Partial GoTN Subsidy)"
+  - min_units: 201
+    max_units: 400
+    rate_per_unit: 4.93
+    subsidy_per_unit: 0.00
+    net_rate: 4.93
+    description: "201 to 400 units"
+  - min_units: 401
+    max_units: 500
+    rate_per_unit: 6.60
+    subsidy_per_unit: 0.00
+    net_rate: 6.60
+    description: "401 to 500 units"
+  - min_units: 501
+    max_units: 600
+    rate_per_unit: 8.80
+    subsidy_per_unit: 0.00
+    net_rate: 8.80
+    description: "501 to 600 units"
+  - min_units: 601
+    max_units: 800
+    rate_per_unit: 9.90
+    subsidy_per_unit: 0.00
+    net_rate: 9.90
+    description: "601 to 800 units"
+  - min_units: 801
+    max_units: 1000
+    rate_per_unit: 11.00
+    subsidy_per_unit: 0.00
+    net_rate: 11.00
+    description: "801 to 1000 units"
+  - min_units: 1001
+    max_units: null
+    rate_per_unit: 12.10
+    subsidy_per_unit: 0.00
+    net_rate: 12.10
+    description: "Above 1000 units"
+
+fixed_charges:
+  enabled: false
+  amount_per_cycle: 0.00
+  notes: "Domestic LT-1A fixed monthly charges zero for general domestic consumers"
+
+electricity_tax:
+  enabled: false
+  rate_percentage: 5.0
+  threshold_units: 1000
+  notes: "Domestic low-tension consumption exempt under standard thresholds"
+
+fppca:
+  enabled: true
+  rate_per_unit: 0.32
+  description: "Fuel and Power Purchase Cost Adjustment per billable unit"

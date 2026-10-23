@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  billguard-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: billguard-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  billguard-ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+    container_name: billguard-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+    environment:
+      - BILLGUARD_API_URL=http://billguard-api:8000/api
+    depends_on:
+      - billguard-api
+    restart: unless-stopped
