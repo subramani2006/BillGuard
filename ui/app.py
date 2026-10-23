@@ -2,6 +2,7 @@
 
 import streamlit as st
 from PIL import Image
+from ui.utils import inject_custom_theme
 
 st.set_page_config(
     page_title="BillGuard | Electricity Bill Verification & Anomaly Detection",
@@ -10,138 +11,162 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS styling
+# Apply unified high-tech cyber-slate theme
+inject_custom_theme()
+
+# Grand Hero Banner
 st.markdown("""
-<style>
-    .main-header {
-        font-size: 2.2rem;
-        font-weight: 700;
-        color: #0A2540;
-        margin-bottom: 0.2rem;
-    }
-    .sub-header {
-        font-size: 1.1rem;
-        color: #4A5568;
-        margin-bottom: 1.5rem;
-    }
-    .metric-card {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 18px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .metric-value {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #1E293B;
-    }
-    .metric-label {
-        font-size: 0.85rem;
-        color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .badge-info {
-        background-color: #EFF6FF;
-        color: #1D4ED8;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 0.8rem;
-    }
-</style>
+<div class="hero-banner">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <span class="card-chip chip-cyan">
+            <span class="status-dot"></span> TNERC LT-1A AUDIT ENGINE ACTIVE
+        </span>
+        <span class="card-chip chip-emerald">
+            🛡️ ZERO PRETRAINED WEIGHTS GUARANTEE
+        </span>
+    </div>
+    <div class="hero-title">⚡ BillGuard Enterprise</div>
+    <p class="hero-sub">
+        An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System designed for 
+        Indian domestic electricity consumers. Combines deterministic tariff mathematics, 
+        randomly-initialized deep learning OCR, unsupervised anomaly detection, and bilingual legal reasoning in English & தமிழ்.
+    </p>
+</div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">⚡ BillGuard</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System for Indian Domestic Consumers</div>', unsafe_allow_html=True)
-
-# Overview metrics
+# Overview Metric Grid
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-label">Jurisdiction & Tariff</div>
-        <div class="metric-value">Tamil Nadu</div>
-        <span class="badge-info">TNERC LT-1A 2024</span>
+    <div class="glass-card">
+        <div class="card-label">Statutory Tariff</div>
+        <div class="card-value">Tamil Nadu</div>
+        <span class="card-chip chip-cyan">🏛️ TNERC LT-1A 2024</span>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-label">ML Models Initialized</div>
-        <div class="metric-value">From Scratch</div>
-        <span class="badge-info">Zero Pretrained Weights</span>
+    <div class="glass-card">
+        <div class="card-label">Model Weights</div>
+        <div class="card-value">From Scratch</div>
+        <span class="card-chip chip-emerald">🧠 Zero Pretrained Weights</span>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-label">Bilingual Reasoning</div>
-        <div class="metric-value">English + தமிழ்</div>
-        <span class="badge-info">Legal Evidence Audit</span>
+    <div class="glass-card">
+        <div class="card-label">Explainability</div>
+        <div class="card-value">English + தமிழ்</div>
+        <span class="card-chip chip-amber">⚖️ 3 Regulatory Outcomes</span>
     </div>
     """, unsafe_allow_html=True)
 
 with col4:
     st.markdown("""
-    <div class="metric-card">
-        <div class="metric-label">MLOps Lifecycle</div>
-        <div class="metric-value">Active Gate</div>
-        <span class="badge-info">Drift, Registry & Rollback</span>
+    <div class="glass-card">
+        <div class="card-label">MLOps Platform</div>
+        <div class="card-value">Active Gate</div>
+        <span class="card-chip chip-rose">🔄 Drift & 1-Click Rollback</span>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<br/>", unsafe_allow_html=True)
 
-# Navigation & Features
-st.markdown("### 🔍 System Capabilities & Navigation")
+# System Navigation Cards
+st.markdown("### 🎛️ System Capabilities & Verification Modules")
 
 c1, c2 = st.columns(2)
 
 with c1:
     st.markdown("""
-    #### 📄 [1. Bill Verifier & OCR Upload](Bill_Verifier)
-    - **Dual Input Modes**: Manual entry or upload physical bill card images.
-    - **From-Scratch CRNN OCR**: Field recognition with per-field confidence scoring.
-    - **Human-in-the-Loop Fallback**: Low-confidence crop preview with inline verification.
-    - **Deterministic Mathematical Audit**: Slabs, subsidies (GoTN 100 free units), FPPCA, and arrears.
-    - **Evidence-Based Bilingual Explanations**: In English and Tamil (தமிழ்).
-    - **One-Click Formal Grievance Letter**: Export complaint petition in text or PDF.
-    """)
+    <div class="glass-card" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="font-size: 1.8rem; background: rgba(56, 189, 248, 0.15); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">📄</div>
+            <div>
+                <h4 style="margin: 0; color: #F8FAFC; font-size: 1.2rem;">1. Bill Verifier & OCR Upload</h4>
+                <span style="font-size: 0.8rem; color: #94A3B8;">8-Step Verification Workflow</span>
+            </div>
+        </div>
+        <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.7; margin-bottom: 0;">
+            <li><b>Dual Input Modes:</b> Manual bill parameter entry or physical bill card image upload.</li>
+            <li><b>From-Scratch CRNN OCR:</b> Character-level confidence estimation with interactive crop review.</li>
+            <li><b>Deterministic Audit:</b> Slabs, GoTN 100 free units subsidy, FPPCA fuel surcharge, and arrears.</li>
+            <li><b>Evidence-Based Report:</b> 10-point investigation breakdown into 3 standard regulatory outcomes.</li>
+            <li><b>Legal Petition Export:</b> One-click generation of TANGEDCO grievance letters in plain text or PDF.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("""
-    #### ⚡ [2. Tariff Explorer & Simulator](Tariff_Explorer)
-    - Versioned TANGEDCO LT-1A Tariff Orders (2022, 2023, 2024, and experimental progressive).
-    - Interactive slab price calculator and visual curve.
-    - Billing period extension & proration impact simulator.
-    """)
+    <div class="glass-card">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="font-size: 1.8rem; background: rgba(245, 158, 11, 0.15); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);">⚡</div>
+            <div>
+                <h4 style="margin: 0; color: #F8FAFC; font-size: 1.2rem;">2. Tariff Explorer & Simulator</h4>
+                <span style="font-size: 0.8rem; color: #94A3B8;">Versioned Tariff Intelligence</span>
+            </div>
+        </div>
+        <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.7; margin-bottom: 0;">
+            <li><b>Official Statutory Tariffs:</b> TNERC LT-1A orders (2022, 2023, 2024 revisions) with source citations.</li>
+            <li><b>Simulated Research Tariffs:</b> Clearly labeled with simulation disclaimers.</li>
+            <li><b>Interactive Billing Delay Simulator:</b> Visualizes the financial impact of delayed 75+ day cycles.</li>
+            <li><b>Dynamic Cost Curve:</b> Real-time telescopic slab progression chart.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
 with c2:
     st.markdown("""
-    #### 📊 [3. Historical Consumption Analytics](Historical_Analytics)
-    - Multi-cycle longitudinal trends across domestic archetypes.
-    - Seasonal decomposition (South Indian summer peak vs monsoon low).
-    - Anomaly pattern visualizer (surge, dead meter, arithmetic error).
-    """)
+    <div class="glass-card" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="font-size: 1.8rem; background: rgba(16, 185, 129, 0.15); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">📊</div>
+            <div>
+                <h4 style="margin: 0; color: #F8FAFC; font-size: 1.2rem;">3. Historical Consumption Analytics</h4>
+                <span style="font-size: 0.8rem; color: #94A3B8;">Longitudinal Data Integrity Audit</span>
+            </div>
+        </div>
+        <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.7; margin-bottom: 0;">
+            <li><b>Automated Data Integrity Audit:</b> Enforces <code>discrepancy = billed - calculated</code> on every cycle.</li>
+            <li><b>Archetype Behavioral Profiles:</b> Lifeline, Moderate, High AC, and Luxury Villa.</li>
+            <li><b>Seasonal Decomposition:</b> May-June peak summer (Agni Nakshatram) surge vs monsoon moderation.</li>
+            <li><b>Dual Interactive Charts:</b> Consumption trends and billed vs calculated divergences.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("""
-    #### 🛠️ [4. MLOps Monitoring Center](MLOps_Center)
-    - **Data Drift Detection**: Population Stability Index (PSI) & Kolmogorov-Smirnov test.
-    - **Model Registry & Staging**: Candidate vs Production evaluation gates.
-    - **Safe Promotion & 1-Click Rollback**: Zero-downtime model lifecycle control.
-    - **Automated Retraining**: Train new candidate models strictly from scratch.
-    """)
+    <div class="glass-card">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="font-size: 1.8rem; background: rgba(99, 102, 241, 0.15); width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.3);">🛠️</div>
+            <div>
+                <h4 style="margin: 0; color: #F8FAFC; font-size: 1.2rem;">4. MLOps Monitoring Center</h4>
+                <span style="font-size: 0.8rem; color: #94A3B8;">Governance, Safety Gate & Drift</span>
+            </div>
+        </div>
+        <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.7; margin-bottom: 0;">
+            <li><b>Real-Time Drift Monitoring:</b> Population Stability Index (PSI) and Kolmogorov-Smirnov test.</li>
+            <li><b>Automated Promotion Gate:</b> Rejects candidates failing F1 ≥ 0.75 or Precision ≥ 0.70.</li>
+            <li><b>Safe 1-Click Rollback:</b> Immediate production restoration to previous checkpoint.</li>
+            <li><b>Immutable Audit Trail:</b> SQLite and append-only JSONL prediction records.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<br/>", unsafe_allow_html=True)
 
-# Architectural Integrity Statement
-st.info("""
-**Auditing Integrity & Academic Compliance Statement**:
-- **Zero Pretrained Weights**: Every neural and machine learning model (CRNN OCR, Isolation Forest, PyTorch Autoencoder) is trained strictly from random initialization on locally generated synthetic data. No pretrained APIs, checkpoints, or external weights are used.
-- **Evidence-Backed Verdicts**: A high bill amount alone is never attributed to fraud or meter failure. Only verified mathematical discrepancies, meter physical difference mismatches, or statistical behavioral shifts with explicit uncertainty levels are reported.
-- **Official Tariff Alignment**: Slabs, free subsidies, and billing rules reflect verified Tamil Nadu Electricity Regulatory Commission (TNERC) tariff orders.
-""")
+# Architectural Integrity Statement Card
+st.markdown("""
+<div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-left: 4px solid #38BDF8; border-radius: 12px; padding: 20px 24px; margin-top: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #38BDF8; font-size: 1rem; margin-bottom: 8px;">
+        🛡️ Architectural Governance & Academic Principles
+    </div>
+    <div style="color: #CBD5E1; font-size: 0.9rem; line-height: 1.6;">
+        <b>1. Zero Pretrained Weights:</b> All neural architectures (CRNN OCR, PyTorch Autoencoder) and statistical models (Isolation Forest) are initialized from random weights and trained strictly on locally generated synthetic datasets.<br/>
+        <b>2. Deterministic vs. Heuristic Separation:</b> Arithmetic calculations and statutory slab tariffs are audited with mathematical certainty, while behavioral anomalies are graded with explicit uncertainty levels.<br/>
+        <b>3. Presumption of Innocence:</b> An uncharacteristic spike alone is never termed fraud or meter fault without official laboratory testing pursuant to Rule 57 of the CEA Regulations.
+    </div>
+</div>
+""", unsafe_allow_html=True)

@@ -13,7 +13,12 @@ from src.mlops.drift_monitor import DriftMonitor
 from src.mlops.audit_logger import AuditLogger
 from src.data_gen.bill_generator import SyntheticBillGenerator
 from src.ml.train import train_and_benchmark_all_models
-from ui.utils import format_currency
+from ui.utils import (
+    format_currency,
+    inject_custom_theme,
+    render_hero_banner,
+    get_plotly_dark_theme,
+)
 
 st.set_page_config(
     page_title="MLOps Center | BillGuard",
@@ -21,48 +26,36 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+inject_custom_theme()
 
 # Custom Grand CSS Styling
 st.markdown("""
 <style>
-    .mlops-header {
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #0F172A, #2563EB);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    .mlops-sub {
-        font-size: 1.05rem;
-        color: #475569;
-        margin-bottom: 1.5rem;
-    }
     .prod-card {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        border: 1px solid #334155;
-        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 14px;
         padding: 24px;
         color: white;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 16px rgba(56, 189, 248, 0.1);
     }
     .gate-card {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(31, 41, 55, 0.60) 100%);
+        border: 1px solid rgba(148, 163, 184, 0.15);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 15px;
     }
     .metric-badge {
         display: inline-block;
-        padding: 4px 10px;
+        padding: 4px 12px;
         border-radius: 6px;
         font-weight: 700;
         font-size: 0.85rem;
     }
-    .badge-pass { background-color: #DCFCE7; color: #15803D; }
-    .badge-fail { background-color: #FEE2E2; color: #B91C1C; }
-    .badge-warn { background-color: #FEF3C7; color: #B45309; }
+    .badge-pass { background-color: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-fail { background-color: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-warn { background-color: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -75,8 +68,13 @@ def load_mlops_resources():
 
 registry, drift_monitor, audit_logger = load_mlops_resources()
 
-st.markdown('<div class="mlops-header">🛠️ BillGuard MLOps Governance & Observability Center</div>', unsafe_allow_html=True)
-st.markdown('<div class="mlops-sub">Continuous Model Governance, Automated Safety Promotion Gates, Data Drift Analytics (PSI & KS-Test), and Immutable Audit Trails.</div>', unsafe_allow_html=True)
+# Grand Hero Banner
+render_hero_banner(
+    title="🛠️ MLOps Governance & Observability Center",
+    subtitle="Continuous Model Governance, Automated Safety Promotion Gates, Data Drift Analytics (PSI & KS-Test), and Immutable Audit Trails.",
+    tag_left="<span class='status-dot'></span> ACTIVE OBSERVABILITY ENGINE",
+    tag_right="🛡️ ZERO PRETRAINED WEIGHTS",
+)
 
 # 4 Main Tabs
 tab_gov, tab_drift, tab_retrain, tab_audit = st.tabs([
@@ -278,9 +276,8 @@ with tab_drift:
             xaxis_title="Population Stability Index (PSI)",
             yaxis_title="Monitored Feature",
             margin=dict(l=20, r=20, t=30, b=20),
-            height=320,
-            template="plotly_white",
         )
+        fig_psi = get_plotly_dark_theme(fig_psi, height=320)
         st.plotly_chart(fig_psi, use_container_width=True)
 
     with chart_col2:
@@ -289,18 +286,27 @@ with tab_drift:
             mode="gauge+number",
             value=qual_report['data_quality_score'] * 100,
             domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Data Quality Integrity", 'font': {'size': 16}},
+            title={'text': "Data Quality Integrity", 'font': {'size': 15, 'color': '#CBD5E1'}},
+            number={'font': {'color': '#38BDF8', 'size': 36}},
             gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "#2563EB"},
+                'axis': {'range': [0, 100], 'tickcolor': '#64748B'},
+                'bar': {'color': "#38BDF8"},
+                'bgcolor': '#111827',
+                'bordercolor': '#1E293B',
                 'steps': [
-                    {'range': [0, 60], 'color': "#FEE2E2"},
-                    {'range': [60, 85], 'color': "#FEF3C7"},
-                    {'range': [85, 100], 'color': "#DCFCE7"},
+                    {'range': [0, 60], 'color': "rgba(239, 68, 68, 0.25)"},
+                    {'range': [60, 85], 'color': "rgba(245, 158, 11, 0.25)"},
+                    {'range': [85, 100], 'color': "rgba(16, 185, 129, 0.25)"},
                 ],
             }
         ))
-        fig_gauge.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=320)
+        fig_gauge.update_layout(
+            paper_bgcolor="#0B0F19",
+            plot_bgcolor="#111827",
+            font=dict(family="Inter, sans-serif", color="#E2E8F0"),
+            margin=dict(l=20, r=20, t=30, b=20),
+            height=320
+        )
         st.plotly_chart(fig_gauge, use_container_width=True)
 
     # Interactive Distribution Comparison Overlay
@@ -316,7 +322,7 @@ with tab_drift:
             x=base_vals,
             name="Baseline (Training Data)",
             opacity=0.6,
-            marker_color="#3B82F6",
+            marker_color="#38BDF8",
             nbinsx=30,
         ))
         fig_dist.add_trace(go.Histogram(
@@ -330,11 +336,9 @@ with tab_drift:
             barmode='overlay',
             xaxis_title=selected_drift_feat,
             yaxis_title="Count",
-            legend=dict(x=0.7, y=1),
             margin=dict(l=20, r=20, t=20, b=20),
-            height=280,
-            template="plotly_white"
         )
+        fig_dist = get_plotly_dark_theme(fig_dist, height=280)
         st.plotly_chart(fig_dist, use_container_width=True)
 
     # Detailed Statistical Audit Table
@@ -359,11 +363,15 @@ with tab_drift:
 with tab_retrain:
     st.markdown("### 🔄 Automated End-to-End Retraining Console")
     st.markdown("""
-    <div style="background-color: #F0FDF4; border-left: 4px solid #16A34A; padding: 14px; border-radius: 6px; margin-bottom: 20px;">
-        <b>Strict Zero Pretrained Weights Architecture:</b><br/>
-        Triggering retraining dynamically samples fresh non-overlapping domestic consumer billing histories,
-        re-initializes neural/statistical weights from scratch, computes multi-model benchmarks, and stages a new
-        Candidate version in the Model Registry.
+    <div class="glass-card" style="margin-bottom: 20px; border-left: 3px solid #10B981;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #34D399; margin-bottom: 6px;">
+            Strict Zero Pretrained Weights Architecture
+        </div>
+        <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
+            Triggering retraining dynamically samples fresh non-overlapping domestic consumer billing histories,
+            re-initializes neural/statistical weights from scratch, computes multi-model benchmarks, and stages a new
+            Candidate version in the Model Registry.
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -420,9 +428,9 @@ with tab_retrain:
             barmode="group",
             title="Model Evaluation Metrics on Isolated Test Benchmark",
             labels={"value": "Score (0 - 1.0)", "variable": "Metric"},
-            color_discrete_sequence=["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"]
+            color_discrete_sequence=["#38BDF8", "#10B981", "#F59E0B", "#8B5CF6"]
         )
-        fig_comp.update_layout(height=340, template="plotly_white")
+        fig_comp = get_plotly_dark_theme(fig_comp, height=340)
         st.plotly_chart(fig_comp, use_container_width=True)
         st.dataframe(comp_df, hide_index=True, use_container_width=True)
 

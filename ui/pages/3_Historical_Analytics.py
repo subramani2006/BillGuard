@@ -8,9 +8,15 @@ from pathlib import Path
 
 from src.data_gen.bill_generator import SyntheticBillGenerator
 from src.data_gen.scenario_definitions import CONSUMER_ARCHETYPES
-from ui.utils import format_currency
+from ui.utils import (
+    format_currency,
+    inject_custom_theme,
+    render_hero_banner,
+    get_plotly_dark_theme,
+)
 
 st.set_page_config(page_title="Historical Analytics | BillGuard", page_icon="📊", layout="wide")
+inject_custom_theme()
 
 
 @st.cache_data
@@ -43,19 +49,26 @@ def load_and_validate_dataset():
 
 df = load_and_validate_dataset()
 
-st.title("📊 Historical Consumption Trends & Longitudinal Audit")
-st.markdown(
-    "Inspect longitudinal bi-monthly consumption patterns, seasonal baseline variance, "
-    "and verified historical anomalies across domestic consumer archetypes. "
-    "All records undergo automated on-the-fly mathematical integrity audits."
+# Grand Hero Banner
+render_hero_banner(
+    title="📊 Historical Consumption Analytics & Audit",
+    subtitle="Inspect longitudinal bi-monthly consumption patterns, seasonal baseline variance, and verified historical anomalies across domestic consumer archetypes.",
+    tag_left="<span class='status-dot'></span> 100% MATHEMATICAL INTEGRITY AUDITED",
+    tag_right="🏛️ TNERC LT-1A GROUND TRUTH",
 )
 
 # Mandatory Synthetic Data Banner
-st.info(
-    "📌 **Synthetic Household Consumption Dataset (Audited)**: "
-    "Generated using authentic Tamil Nadu climate factors (May-June peak summer 'Agni Nakshatram' surge vs. monsoon moderation) "
-    "and statutory TNERC LT-1A telescopic slab rules. Assumptions documented; labelled synthetic for academic evaluation."
-)
+st.markdown("""
+<div class="glass-card" style="margin-bottom: 20px; border-left: 3px solid #38BDF8;">
+    <div style="font-size: 0.82rem; font-weight: 700; color: #38BDF8; text-transform: uppercase; margin-bottom: 4px;">
+        📌 Synthetic Household Consumption Dataset (Audited)
+    </div>
+    <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
+        Generated using authentic Tamil Nadu climate factors (May-June peak summer <i>Agni Nakshatram</i> surge vs. monsoon moderation) 
+        and statutory TNERC LT-1A telescopic slab rules. Assumptions documented; labelled synthetic for academic evaluation.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Archetype & Consumer Selector
 col1, col2 = st.columns([1, 2])
@@ -67,9 +80,17 @@ with col1:
         format_func=lambda x: f"{CONSUMER_ARCHETYPES[x].name} ({x})"
     )
     arch_info = CONSUMER_ARCHETYPES[selected_arch]
-    st.markdown(f"**Profile:** {arch_info.description}")
-    st.markdown(f"**Baseline Usage:** {arch_info.base_bimonthly_units_mean:.0f} ± {arch_info.base_bimonthly_units_std:.0f} kWh/cycle")
-    st.markdown(f"**AC Connected:** {'Yes (Summer multiplier: ' + str(arch_info.summer_multiplier) + 'x)' if arch_info.has_ac else 'No'}")
+    
+    st.markdown(f"""
+    <div class="glass-card" style="margin-top: 10px; margin-bottom: 14px;">
+        <div style="font-size: 0.85rem; font-weight: 700; color: #38BDF8; margin-bottom: 6px;">Profile Details</div>
+        <div style="font-size: 0.9rem; color: #CBD5E1; line-height: 1.5;">
+            {arch_info.description}<br/>
+            <b>Baseline:</b> {arch_info.base_bimonthly_units_mean:.0f} ± {arch_info.base_bimonthly_units_std:.0f} kWh/cycle<br/>
+            <b>AC Connected:</b> {'Yes (Summer: ' + str(arch_info.summer_multiplier) + 'x)' if arch_info.has_ac else 'No'}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     arch_df = df[df["archetype"] == selected_arch]
     consumer_list = list(arch_df["consumer_id"].unique())
@@ -84,7 +105,7 @@ anomalous_cycles = int(consumer_records["is_anomaly"].sum())
 total_net_discrepancy = float(consumer_records["recalculated_discrepancy"].sum())
 
 with col2:
-    st.markdown("#### 🛡️ Data Integrity & Summary Audit")
+    st.markdown("#### 🛡️ Data Integrity & Longitudinal Summary")
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         st.metric("Total Cycles Audited", total_cycles)
@@ -114,8 +135,11 @@ with tab_chart1:
         y=consumer_records["recorded_units"],
         mode="lines+markers",
         name="Recorded Consumption (kWh)",
-        line=dict(color="#2563EB", width=2.5),
-        marker=dict(size=7)
+        line=dict(color="#38BDF8", width=3),
+        marker=dict(size=7, color="#38BDF8"),
+        fill="tozeroy",
+        fillcolor="rgba(56, 189, 248, 0.08)",
+        hovertemplate="Date: %{x}<br>Units: %{y:.1f} kWh<extra></extra>"
     ))
     # Historical mean reference line
     mean_val = consumer_records["recorded_units"].mean()
@@ -124,15 +148,15 @@ with tab_chart1:
         line_dash="dot",
         line_color="#94A3B8",
         annotation_text=f"Historical Baseline Mean: {mean_val:.1f} kWh",
-        annotation_position="bottom right"
+        annotation_position="bottom right",
+        annotation_font=dict(color="#CBD5E1", size=11)
     )
     fig_units.update_layout(
         title=f"Consumption Trend Over 12 Billing Cycles ({selected_arch})",
         xaxis_title="Billing Reading Date",
         yaxis_title="Energy Consumed (kWh)",
-        template="plotly_white",
-        height=380,
     )
+    fig_units = get_plotly_dark_theme(fig_units, height=380)
     st.plotly_chart(fig_units, use_container_width=True)
 
 with tab_chart2:
@@ -142,24 +166,25 @@ with tab_chart2:
         y=consumer_records["calculated_grand_total"],
         mode="lines+markers",
         name="Statutory Calculated Total (₹)",
-        line=dict(color="#10B981", width=2.5),
-        marker=dict(size=7)
+        line=dict(color="#10B981", width=3),
+        marker=dict(size=7, color="#10B981"),
+        hovertemplate="Date: %{x}<br>Calculated: ₹%{y:,.2f}<extra></extra>"
     ))
     fig_amt.add_trace(go.Scatter(
         x=consumer_records["current_reading_date"].dt.strftime("%Y-%m-%d"),
         y=consumer_records["billed_amount"],
         mode="lines+markers",
         name="Billed Amount on Receipt (₹)",
-        line=dict(color="#EF4444", width=2.5, dash="dash"),
-        marker=dict(size=7)
+        line=dict(color="#EF4444", width=3, dash="dash"),
+        marker=dict(size=7, color="#EF4444"),
+        hovertemplate="Date: %{x}<br>Billed: ₹%{y:,.2f}<extra></extra>"
     ))
     fig_amt.update_layout(
         title="Billed Amount vs Statutory Calculated Obligation (Discrepancy Visualizer)",
         xaxis_title="Billing Reading Date",
         yaxis_title="Amount (₹ INR)",
-        template="plotly_white",
-        height=380,
     )
+    fig_amt = get_plotly_dark_theme(fig_amt, height=380)
     st.plotly_chart(fig_amt, use_container_width=True)
 
 # Longitudinal Audit Breakdown Table

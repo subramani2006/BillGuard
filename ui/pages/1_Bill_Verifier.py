@@ -24,9 +24,12 @@ from ui.utils import (
     get_certainty_badge,
     get_outcome_badge,
     get_check_status_badge,
+    inject_custom_theme,
+    render_hero_banner,
 )
 
 st.set_page_config(page_title="Bill Verifier | BillGuard", page_icon="📄", layout="wide")
+inject_custom_theme()
 
 
 def safe_float(val, default: float = 0.0) -> float:
@@ -72,11 +75,12 @@ def load_components():
 
 tariff_engine, exp_engine, grievance_gen, registry, audit_logger, feat_extractor, ocr_extractor, ml_model = load_components()
 
-st.title("📄 Electricity Bill Verifier & Evidence-Based Audit")
-st.markdown(
-    "Verify domestic electricity bills against statutory Tamil Nadu Electricity Regulatory Commission (TNERC) "
-    "tariffs, meter reading differences, and from-scratch ML anomaly baselines. "
-    "Generates evidence-backed audit findings across 3 distinct regulatory outcomes without unproven accusations."
+# Grand Hero Banner
+render_hero_banner(
+    title="📄 Electricity Bill Verifier & Evidence Audit",
+    subtitle="Statutory TNERC LT-1A Tariff Verification, from-scratch CRNN OCR reading extraction, and explainable multi-tier anomaly detection across 3 official regulatory outcomes.",
+    tag_left="<span class='status-dot'></span> 8-STAGE AUDIT ENGINE ACTIVE",
+    tag_right="🏛️ TNERC GAZETTE COMPLIANT",
 )
 
 # Available tariffs separated into Official and Simulated
@@ -376,10 +380,28 @@ if btn_verify or preset != "None (Custom Entry)":
         for err in t_result.validation_errors:
             st.markdown(f"- ❌ {err}")
 
-    # Standard Outcome Banner (A, B, or C)
+    # Standard Outcome Banner (A, B, or C) with Matching Cyber Elevation
+    outcome_box_class = (
+        "outcome-box-a" if "A." in report.outcome or "arithmetic" in report.outcome.lower()
+        else ("outcome-box-b" if "B." in report.outcome or "investigation" in report.outcome.lower() else "outcome-box-c")
+    )
     outcome_badge = get_outcome_badge(report.outcome)
-    st.markdown(f"### {outcome_badge}", unsafe_allow_html=True)
-    st.markdown(f"**Specific Finding:** `{report.finding_title}` &nbsp;&nbsp;|&nbsp;&nbsp; **Evidence Level:** {get_certainty_badge(report.certainty_level)}", unsafe_allow_html=True)
+    cert_badge = get_certainty_badge(report.certainty_level)
+
+    st.markdown(f"""
+    <div class="{outcome_box_class}">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <div>{outcome_badge}</div>
+            <div>{cert_badge}</div>
+        </div>
+        <div style="font-size: 1.2rem; font-weight: 700; color: #F8FAFC; margin-bottom: 6px;">
+            Specific Finding: {report.finding_title}
+        </div>
+        <div style="font-size: 0.95rem; color: #CBD5E1; line-height: 1.5;">
+            {report.english_summary}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Top KPI Metrics Row
     m1, m2, m3, m4 = st.columns(4)
@@ -424,32 +446,54 @@ if btn_verify or preset != "None (Custom Entry)":
 
     with col_rep1:
         st.markdown(f"""
-        **1. Bill Comparison:**
-        - Previous Bill Amount: **{format_currency(report.previous_bill_amount)}**
-        - Current Billed Amount: **{format_currency(report.current_bill_amount)}**
-        - Bill Amount Change: **{f'{report.bill_amount_pct_change:+.1f}%' if report.bill_amount_pct_change is not None else 'N/A'}**
-
-        **2. Meter Readings & Units:**
-        - Previous Meter Reading: **{report.previous_meter_reading:.1f}**
-        - Current Meter Reading: **{report.current_meter_reading:.1f}**
-        - Calculated Consumption: **{report.calculated_units:.1f} kWh**
-        - Billed Consumption on Slip: **{report.billed_units if report.billed_units is not None else 'N/A'} kWh**
-
-        **3. Billing Cycle & Tariff:**
-        - Billing Period: **{report.billing_period_days} Days** ({'⚠️ Extended Delay' if report.billing_period_days > 65 else 'Standard bi-monthly'})
-        - Tariff Version: **{report.applicable_tariff_name}**
-        """)
+        <div class="glass-card">
+            <h5 style="color: #38BDF8; margin-top: 0; margin-bottom: 12px;">📊 Readings, Consumption & Cycle</h5>
+            <div style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.8;">
+                <div><b>1. Bill Comparison:</b></div>
+                <div style="padding-left: 14px;">
+                    • Previous Bill: <b>{format_currency(report.previous_bill_amount)}</b><br/>
+                    • Current Billed: <b>{format_currency(report.current_bill_amount)}</b><br/>
+                    • Bill Amount Change: <b>{f'{report.bill_amount_pct_change:+.1f}%' if report.bill_amount_pct_change is not None else 'N/A'}</b>
+                </div>
+                <div style="margin-top: 8px;"><b>2. Meter Readings & Consumption:</b></div>
+                <div style="padding-left: 14px;">
+                    • Previous Reading: <b>{report.previous_meter_reading:.1f}</b><br/>
+                    • Current Reading: <b>{report.current_meter_reading:.1f}</b><br/>
+                    • Calculated Units: <b>{report.calculated_units:.1f} kWh</b><br/>
+                    • Billed Units on Slip: <b>{report.billed_units if report.billed_units is not None else 'N/A'} kWh</b>
+                </div>
+                <div style="margin-top: 8px;"><b>3. Billing Cycle & Tariff:</b></div>
+                <div style="padding-left: 14px;">
+                    • Billing Period: <b>{report.billing_period_days} Days</b> ({'⚠️ Extended Delay' if report.billing_period_days > 65 else 'Standard bi-monthly'})<br/>
+                    • Tariff Version: <b>{report.applicable_tariff_name}</b>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col_rep2:
         st.markdown(f"""
-        **4. Statutory Assessment & Discrepancies:**
-        - Independently Calculated Total: **{format_currency(report.independently_calculated_amount)}**
-        - Tariff Slab Net Energy Charge: **{format_currency(t_result.energy_charge_net)}**
-        - GoTN 100-Unit Subsidy: **{format_currency(t_result.subsidy_amount)}**
-        - FPPCA Fuel Surcharge: **{format_currency(t_result.fppca_amount)}**
-        - Past Arrears Assessed: **{format_currency(t_result.arrears_amount)}**
-        - Net Mathematical Discrepancy: **{format_currency(report.discrepancy_amount)}**
-        """)
+        <div class="glass-card">
+            <h5 style="color: #34D399; margin-top: 0; margin-bottom: 12px;">🏛️ Statutory Tariff Assessment & Discrepancies</h5>
+            <div style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.8;">
+                <div><b>4. Statutory Assessment & Discrepancies:</b></div>
+                <div style="padding-left: 14px;">
+                    • Independently Calculated: <b>{format_currency(report.independently_calculated_amount)}</b><br/>
+                    • Slab Net Energy Charge: <b>{format_currency(t_result.energy_charge_net)}</b><br/>
+                    • GoTN 100-Unit Subsidy: <b>{format_currency(t_result.subsidy_amount)}</b><br/>
+                    • FPPCA Fuel Surcharge: <b>{format_currency(t_result.fppca_amount)}</b><br/>
+                    • Past Arrears Assessed: <b>{format_currency(t_result.arrears_amount)}</b><br/>
+                    • Net Mathematical Discrepancy: <b style="color: {'#EF4444' if abs(report.discrepancy_amount or 0) > 1 else '#34D399'};">{format_currency(report.discrepancy_amount)}</b>
+                </div>
+                <div style="margin-top: 8px;"><b>5. Regulatory Consistency:</b></div>
+                <div style="padding-left: 14px;">
+                    • Verification Status: <b>{'Compliant' if t_result.is_valid and abs(report.discrepancy_amount or 0) <= 1 else 'Discrepancy / Attention Needed'}</b>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
 
     # Itemized Discrepancy Table
     st.markdown("##### 🧮 Itemized Discrepancy Reconciliation")
@@ -465,14 +509,26 @@ if btn_verify or preset != "None (Custom Entry)":
     # Possible Explanations & Missing Evidence
     col_exp1, col_exp2 = st.columns(2)
     with col_exp1:
-        st.markdown("##### 💡 Possible Explanations Supported by Available Evidence:")
-        for pe in report.possible_explanations:
-            st.markdown(f"- {pe}")
+        expl_list = "".join([f"<li style='margin-bottom: 6px;'>{pe}</li>" for pe in report.possible_explanations])
+        st.markdown(f"""
+        <div class="glass-card">
+            <h5 style="color: #FBBF24; margin-top: 0; margin-bottom: 10px;">💡 Evidence-Supported Possible Explanations</h5>
+            <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                {expl_list}
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col_exp2:
-        st.markdown("##### 🔎 Missing Evidence & Recommended Checks:")
-        for me in report.missing_evidence_and_recommended_checks:
-            st.markdown(f"- {me}")
+        miss_list = "".join([f"<li style='margin-bottom: 6px;'>{me}</li>" for me in report.missing_evidence_and_recommended_checks])
+        st.markdown(f"""
+        <div class="glass-card">
+            <h5 style="color: #38BDF8; margin-top: 0; margin-bottom: 10px;">🔎 Missing Evidence & Recommended Verifications</h5>
+            <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
+                {miss_list}
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Bilingual Explanations Tabs (Step 4 & 5)
     st.markdown("---")

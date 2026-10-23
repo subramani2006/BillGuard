@@ -3,12 +3,19 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 
 from src.tariff.engine import TariffEngine
 from src.tariff.models import BillInput
-from ui.utils import format_currency
+from ui.utils import (
+    format_currency,
+    inject_custom_theme,
+    render_hero_banner,
+    get_plotly_dark_theme,
+)
 
 st.set_page_config(page_title="Tariff Explorer | BillGuard", page_icon="⚡", layout="wide")
+inject_custom_theme()
 
 @st.cache_resource
 def get_engine():
@@ -16,11 +23,12 @@ def get_engine():
 
 engine = get_engine()
 
-st.title("⚡ Tamil Nadu Tariff Explorer & Simulator")
-st.markdown(
-    "Explore official statutory Tamil Nadu Electricity Regulatory Commission (TNERC) domestic tariff schedules, "
-    "Government of Tamil Nadu (GoTN) 100-unit lifeline subsidies, and simulate the mathematical impact of delayed billing cycles. "
-    "Strictly separates verified statutory tariffs from experimental research models."
+# Grand Hero Banner
+render_hero_banner(
+    title="⚡ Tamil Nadu Tariff Explorer & Simulator",
+    subtitle="Explore official statutory TNERC LT-1A tariff schedules, GoTN 100-unit lifeline subsidies, and simulate proration impact for delayed billing cycles.",
+    tag_left="<span class='status-dot'></span> VERSIONED TARIFF INTELLIGENCE",
+    tag_right="🏛️ TNERC GAZETTE VERIFIED",
 )
 
 tariffs = engine.list_available_tariffs()
@@ -59,20 +67,41 @@ else:
 # Comprehensive Metadata Cards
 col_m1, col_m2, col_m3 = st.columns(3)
 with col_m1:
-    st.info(
-        f"**Category:** {tariff_cfg.tariff_category}\n\n"
-        f"**State & Authority:** {tariff_cfg.state} | {tariff_cfg.authority}"
-    )
+    st.markdown(f"""
+    <div class="glass-card">
+        <div class="card-label">Category & Authority</div>
+        <div class="card-value" style="font-size: 1.3rem;">{tariff_cfg.tariff_category}</div>
+        <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
+            State: <b style="color: #E2E8F0;">{tariff_cfg.state}</b><br/>
+            Authority: <b style="color: #38BDF8;">{tariff_cfg.authority}</b>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col_m2:
-    st.info(
-        f"**Statutory Order:** {tariff_cfg.order_reference}\n\n"
-        f"**Effective Dates:** {tariff_cfg.effective_start_date or 'N/A'} to {tariff_cfg.effective_end_date or 'Present'}"
-    )
+    st.markdown(f"""
+    <div class="glass-card">
+        <div class="card-label">Statutory Order & Period</div>
+        <div class="card-value" style="font-size: 1.15rem; color: #38BDF8;">{tariff_cfg.order_reference[:28]}</div>
+        <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
+            Effective: <b style="color: #E2E8F0;">{tariff_cfg.effective_start_date or 'N/A'}</b> to <b style="color: #E2E8F0;">{tariff_cfg.effective_end_date or 'Present'}</b>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col_m3:
-    st.info(
-        f"**Billing Cycle:** {tariff_cfg.billing_cycle_days} Days ({tariff_cfg.billing_cycle_type})\n\n"
-        f"**Lifeline Allowance:** {tariff_cfg.free_allowance_units} Units Free"
-    )
+    st.markdown(f"""
+    <div class="glass-card">
+        <div class="card-label">Cycle & Lifeline Allowance</div>
+        <div class="card-value" style="font-size: 1.3rem; color: #34D399;">{tariff_cfg.billing_cycle_days} Days</div>
+        <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
+            Schedule: <b style="color: #E2E8F0;">{tariff_cfg.billing_cycle_type}</b><br/>
+            Subsidy: <b style="color: #34D399;">{tariff_cfg.free_allowance_units} Units Free (GoTN)</b>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br/>", unsafe_allow_html=True)
 
 # Policy & Calculation Methodology Card
 with st.expander("📜 Subsidy Eligibility & Calculation Methodology", expanded=True):
@@ -151,5 +180,41 @@ for u in curve_units:
     r = engine.calculate_bill(b_tmp)
     curve_costs.append(r.calculated_grand_total)
 
-chart_df = pd.DataFrame({"Units Consumed (kWh)": curve_units, "Bill Amount (₹)": curve_costs}).set_index("Units Consumed (kWh)")
-st.line_chart(chart_df)
+fig_curve = go.Figure()
+fig_curve.add_trace(go.Scatter(
+    x=curve_units,
+    y=curve_costs,
+    mode="lines+markers",
+    name=f"{tariff_cfg.tariff_name}",
+    line=dict(color="#38BDF8", width=3),
+    marker=dict(size=5, color="#38BDF8"),
+    fill="tozeroy",
+    fillcolor="rgba(56, 189, 248, 0.08)",
+    hovertemplate="Units: %{x} kWh<br>Bill Total: ₹%{y:,.2f}<extra></extra>"
+))
+
+# Key threshold vertical lines
+fig_curve.add_vline(
+    x=100,
+    line_dash="dot",
+    line_color="#10B981",
+    annotation_text="100 kWh (Free Subsidy Limit)",
+    annotation_position="top left",
+    annotation_font=dict(color="#34D399", size=10)
+)
+fig_curve.add_vline(
+    x=500,
+    line_dash="dot",
+    line_color="#F59E0B",
+    annotation_text="500 kWh (Telescopic Threshold)",
+    annotation_position="top left",
+    annotation_font=dict(color="#FBBF24", size=10)
+)
+
+fig_curve.update_layout(
+    title=f"Bimonthly Bill Obligation Curve — {tariff_cfg.tariff_name}",
+    xaxis_title="Energy Consumed (kWh)",
+    yaxis_title="Total Bill Amount (₹ INR)",
+)
+fig_curve = get_plotly_dark_theme(fig_curve, height=380)
+st.plotly_chart(fig_curve, use_container_width=True)
