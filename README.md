@@ -272,10 +272,8 @@ BillGuard is an academic public-interest engineering project designed to assist 
 
 ## 🎓 Academic Capstone Submission Details
 - **Project Title:** BillGuard: An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System for Indian Domestic Consumers
-- **Project Team Members:**
-  1. **Selvamani** — Register No: `2023510035` (Lead MLOps Engineer & Core Pipeline Architect)
-  2. **Subramani** — Register No: `2023510024` (Lead ML & Tariff Systems Engineer)
-- **Final-Year Project Report Deliverables:**
+
+- ** Project Report Deliverables:**
   - 📄 [**Word Format (.docx)**](project_report/BillGuard_Project_Report.docx) — Fully styled academic report with custom tables, callouts, and embedded figures.
   - 📑 [**PDF Format (.pdf)**](project_report/BillGuard_Project_Report.pdf) — 13-page publication-grade PDF report with running headers and two-pass page numbering.
   - 📐 [**Architecture Graphic**](project_report/architecture_diagram.png) — 300 DPI high-resolution 10-subsystem architecture diagram.
