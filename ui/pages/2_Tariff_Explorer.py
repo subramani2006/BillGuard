@@ -57,9 +57,32 @@ selected_code = st.selectbox(
 
 tariff_cfg = engine.get_tariff(selected_code)
 
+# Defensive extraction of metadata attributes
+cat_name = getattr(tariff_cfg, "tariff_category", "LT-1A Domestic")
+state_name = getattr(tariff_cfg, "state", "Tamil Nadu")
+auth_name = getattr(tariff_cfg, "authority", "TNERC")
+order_ref = getattr(tariff_cfg, "order_reference", "TNERC Tariff Order")
+start_dt = getattr(tariff_cfg, "effective_start_date", "N/A") or "N/A"
+end_dt = getattr(tariff_cfg, "effective_end_date", "Present") or "Present"
+cycle_days = getattr(tariff_cfg, "billing_cycle_days", 60)
+cycle_type = getattr(tariff_cfg, "billing_cycle_type", "bi-monthly")
+free_units = getattr(tariff_cfg, "free_allowance_units", 100)
+subsidy_cond = getattr(
+    tariff_cfg,
+    "subsidy_conditions",
+    "First 100 units free per bi-monthly cycle subsidized by Government of Tamil Nadu (G.O. Ms. No. 38, Energy Department)."
+)
+calc_method = getattr(
+    tariff_cfg,
+    "calculation_methodology",
+    "TNERC progressive telescopic slab assessment. Gross energy charge minus GoTN tariff subsidy, plus FPPCA fuel adjustment surcharge on billable units."
+)
+
 # Mandatory simulation banner if tariff is not official
-if tariff_cfg.verification_status != "VERIFIED_OFFICIAL":
-    st.warning("⚠️ **Simulation only — actual charges may differ. Verify the applicable official tariff.**")
+ver_status = getattr(tariff_cfg, "verification_status", "VERIFIED_OFFICIAL")
+if ver_status != "VERIFIED_OFFICIAL":
+    disclaimer_text = getattr(tariff_cfg, "disclaimer", "Simulation only — actual charges may differ. Verify the applicable official tariff.")
+    st.warning(f"⚠️ **{disclaimer_text}**")
     st.caption("Never describe an unverified calculation as a statutory or official bill result.")
 else:
     st.success("✅ **Official Statutory Tariff**: Verified against official TNERC tariff orders and Gazette notifications.")
@@ -70,10 +93,10 @@ with col_m1:
     st.markdown(f"""
     <div class="glass-card">
         <div class="card-label">Category & Authority</div>
-        <div class="card-value" style="font-size: 1.3rem;">{tariff_cfg.tariff_category}</div>
+        <div class="card-value" style="font-size: 1.3rem;">{cat_name}</div>
         <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
-            State: <b style="color: #E2E8F0;">{tariff_cfg.state}</b><br/>
-            Authority: <b style="color: #38BDF8;">{tariff_cfg.authority}</b>
+            State: <b style="color: #E2E8F0;">{state_name}</b><br/>
+            Authority: <b style="color: #38BDF8;">{auth_name}</b>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -82,9 +105,9 @@ with col_m2:
     st.markdown(f"""
     <div class="glass-card">
         <div class="card-label">Statutory Order & Period</div>
-        <div class="card-value" style="font-size: 1.15rem; color: #38BDF8;">{tariff_cfg.order_reference[:28]}</div>
+        <div class="card-value" style="font-size: 1.15rem; color: #38BDF8;">{order_ref[:28]}</div>
         <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
-            Effective: <b style="color: #E2E8F0;">{tariff_cfg.effective_start_date or 'N/A'}</b> to <b style="color: #E2E8F0;">{tariff_cfg.effective_end_date or 'Present'}</b>
+            Effective: <b style="color: #E2E8F0;">{start_dt}</b> to <b style="color: #E2E8F0;">{end_dt}</b>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -93,10 +116,10 @@ with col_m3:
     st.markdown(f"""
     <div class="glass-card">
         <div class="card-label">Cycle & Lifeline Allowance</div>
-        <div class="card-value" style="font-size: 1.3rem; color: #34D399;">{tariff_cfg.billing_cycle_days} Days</div>
+        <div class="card-value" style="font-size: 1.3rem; color: #34D399;">{cycle_days} Days</div>
         <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 6px;">
-            Schedule: <b style="color: #E2E8F0;">{tariff_cfg.billing_cycle_type}</b><br/>
-            Subsidy: <b style="color: #34D399;">{tariff_cfg.free_allowance_units} Units Free (GoTN)</b>
+            Schedule: <b style="color: #E2E8F0;">{cycle_type}</b><br/>
+            Subsidy: <b style="color: #34D399;">{free_units} Units Free (GoTN)</b>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -105,9 +128,9 @@ st.markdown("<br/>", unsafe_allow_html=True)
 
 # Policy & Calculation Methodology Card
 with st.expander("📜 Subsidy Eligibility & Calculation Methodology", expanded=True):
-    st.markdown(f"**Subsidy Eligibility & Conditions:**\n{tariff_cfg.subsidy_conditions}")
-    st.markdown(f"**Calculation Methodology:**\n{tariff_cfg.calculation_methodology}")
-    if tariff_cfg.fppca.enabled:
+    st.markdown(f"**Subsidy Eligibility & Conditions:**\n{subsidy_cond}")
+    st.markdown(f"**Calculation Methodology:**\n{calc_method}")
+    if hasattr(tariff_cfg, "fppca") and tariff_cfg.fppca and tariff_cfg.fppca.enabled:
         st.markdown(f"**FPPCA Fuel Adjustment:** ₹{tariff_cfg.fppca.rate_per_unit:.2f}/kWh ({tariff_cfg.fppca.description})")
 
 st.markdown("### 📋 Versioned Slab Structure")

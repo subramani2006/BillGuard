@@ -252,10 +252,13 @@ with col_f2:
     )
 
     tariff_obj = tariff_engine.get_tariff(tariff_selected)
-    if tariff_obj.verification_status != "VERIFIED_OFFICIAL":
-        st.caption(f"⚠️ *{tariff_obj.disclaimer}*")
+    t_status = getattr(tariff_obj, "verification_status", "VERIFIED_OFFICIAL")
+    if t_status != "VERIFIED_OFFICIAL":
+        disc_msg = getattr(tariff_obj, "disclaimer", "Simulation only — actual charges may differ. Verify the applicable official tariff.")
+        st.caption(f"⚠️ *{disc_msg}*")
     else:
-        st.caption(f"🏛️ *TNERC Official Order: {tariff_obj.order_reference}*")
+        ord_ref = getattr(tariff_obj, "order_reference", "TNERC Statutory Order")
+        st.caption(f"🏛️ *TNERC Official Order: {ord_ref}*")
 
 with col_f3:
     st.markdown("##### ⚡ Meter Readings & Billed Values")
