@@ -32,6 +32,7 @@ data/ocr_synth/
 # Secrets, local environment & credentials
 .env
 .env.*
+!.env.example
 secrets.toml
 .streamlit/secrets.toml
 

@@ -1,0 +1,48 @@
+# Git & GitHub
+.git/
+.github/
+.gitignore
+
+# Python caches & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+test-results.xml
+tests/
+
+# Large academic reports (already generated, not needed in production container)
+project_report/
+scripts/
+
+# Local databases and runtime logs
+*.db
+*.sqlite
+*.log
+mlruns/
+mlflow.db
+data/billguard_audit.db
+data/temp_*.pdf
+data/ocr_synth/
+
+# Secrets and local configurations
+.env
+.env.*
+secrets.toml
+.streamlit/secrets.toml
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
