@@ -11,7 +11,8 @@ This guide provides step-by-step instructions for deploying **BillGuard: An Expl
 4. [Testing & Verifying the Live Deployed Application](#4-testing--verifying-the-live-deployed-application)
 5. [Streamlit Cloud Storage & MLOps Considerations](#5-streamlit-cloud-storage--mlops-considerations)
 6. [Updating the Deployed Application](#6-updating-the-deployed-application)
-7. [Docker / Self-Hosted Alternative](#7-docker--self-hosted-alternative)
+7. [Docker / Self-Hosted Containerization](#7-docker--self-hosted-containerization)
+8. [Amazon Web Services (AWS) Production Deployment](#8-amazon-web-services-aws-production-deployment)
 
 ---
 
@@ -132,9 +133,9 @@ Streamlit Community Cloud continuously monitors your GitHub repository:
 
 ---
 
-## 7. Docker / Self-Hosted Alternative
+## 7. Docker / Self-Hosted Containerization
 
-For on-premises institutional hosting or private cloud servers, a standard `Dockerfile` can be used:
+For on-premises institutional hosting or private cloud servers, the production `Dockerfile` in the root directory can be built and executed locally:
 
 ```dockerfile
 FROM python:3.10-slim
@@ -146,6 +147,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     fonts-dejavu-core \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -153,13 +155,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8501 8000
+EXPOSE 8501
 
 # Start Streamlit
 CMD ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
 ```
 
-To build and run:
+To build and run locally:
 ```bash
 docker build -t billguard:latest .
 docker run -p 8501:8501 billguard:latest
@@ -167,5 +169,131 @@ docker run -p 8501:8501 billguard:latest
 
 ---
 
+## 8. Amazon Web Services (AWS) Production Deployment
+
+BillGuard can be deployed to **Amazon Web Services (AWS)** using a production-grade, highly available, and cost-effective cloud architecture designed specifically for Indian domestic consumer workloads.
+
+### 8.1 AWS Cloud Architecture Overview
+
+```
++---------------------------------------------------------------------------------+
+|                                 AMAZON WEB SERVICES (AWS)                       |
+|                          Region: ap-south-1 (Mumbai, India)                     |
+|                                                                                 |
+|  +--------------------+       +-----------------------------------------------+ |
+|  | GitHub Repository  | ====> | AWS App Runner (Serverless Container)         | |
+|  | subramani2006/     | (Push)|  - Auto-builds from root Dockerfile           | |
+|  | BillGuard          |       |  - Port 8501 (Streamlit Engine)               | |
+|  +--------------------+       |  - Auto-scales & scales-to-zero               | |
+|                               |  - HTTPS / TLS managed certificate            | |
+|                               +-----------------------+-----------------------+ |
+|                                                       |                         |
+|                               +-----------------------+                         |
+|                               |                       |                         |
+|                               v                       v                         |
+|                     +-------------------+   +--------------------+              |
+|                     | Amazon S3 Bucket  |   | Amazon CloudWatch  |              |
+|                     | (Audit PDFs &     |   | (Logs, Metrics,    |              |
+|                     | Synthetic Bills)  |   | Drift Alarms)      |              |
+|                     +-------------------+   +--------------------+              |
++---------------------------------------------------------------------------------+
+```
+
+| AWS Service | Role in BillGuard | Pricing & Free Tier Safety |
+| :--- | :--- | :--- |
+| **AWS App Runner** | Managed container hosting for Streamlit web UI | Auto-scales down when idle; builds directly from GitHub without needing Docker Desktop. |
+| **Amazon S3** | Durable storage for generated grievance petitions & sanitized bills | **12-Month Free Tier:** 5 GB storage, 20,000 GET, 2,000 PUT requests free/month ($\approx$ **₹0**). |
+| **Amazon CloudWatch** | Ingestion of audit telemetry, latency tracking, and error alarms | **Always Free Tier:** 5 GB log ingestion, 10 custom metrics, 3 metric alarms free/month ($\approx$ **₹0**). |
+
+---
+
+### 8.2 Phase A: AWS Account Setup & Zero-Spend Cost Protection
+
+> [!IMPORTANT]
+> If you are a beginner, always set up a **Zero-Spend Budget Alert** immediately after creating your account to ensure you are never billed unexpectedly.
+
+1. **Create an AWS Account**:
+   - Go to [**https://aws.amazon.com/free/**](https://aws.amazon.com/free/).
+   - Click **Create an AWS Account** and complete registration (12 months free tier included).
+2. **Select India Region**:
+   - In the top-right corner of the AWS Management Console, select **Asia Pacific (Mumbai) `ap-south-1`**. This ensures minimum latency for Indian domestic billing calculations.
+3. **Configure AWS Zero-Spend Budget Alert**:
+   - Search for **AWS Budgets** in the top search bar.
+   - Click **Create budget** $\to$ Select **Zero spend budget** template.
+   - Enter your email address to receive immediate alerts if any service exceeds $0.01.
+   - Click **Create budget**.
+
+---
+
+### 8.3 Phase B: Deploying BillGuard via AWS App Runner (Recommended)
+
+AWS App Runner connects directly to your GitHub repository and automatically builds and runs the container using the repository's `Dockerfile`. **You do NOT need Docker Desktop installed on your local computer.**
+
+#### Step 1: Open AWS App Runner
+- In the AWS Console search bar, type `App Runner` and open the service.
+- Click **Create service**.
+
+#### Step 2: Connect Source Code Repository
+- **Source repository type**: Choose **Source code repository**.
+- Click **Add new** under GitHub connection, authorize your GitHub account (`subramani2006`), and select repository `subramani2006/BillGuard`.
+- **Branch**: Select `main`.
+- **Deployment trigger**: Select **Automatic** (every push to `main` redeploys the app).
+- Click **Next**.
+
+#### Step 3: Configure Build & Container Runtime
+- **Runtime**: Select **Dockerfile** (AWS App Runner will automatically detect the production `Dockerfile` in the root).
+- **Port**: Enter `8501` (Streamlit standard port).
+- Click **Next**.
+
+#### Step 4: Configure Service & Resources
+- **Service name**: `billguard`
+- **Virtual CPU & Memory**: Select **1 vCPU, 2 GB Memory**.
+- **Environment variables**: Add the following key-value pairs (matching `.env.example`):
+  | Key | Value |
+  | :--- | :--- |
+  | `ENVIRONMENT` | `production` |
+  | `PORT` | `8501` |
+  | `STREAMLIT_SERVER_HEADLESS` | `true` |
+  | `AWS_REGION` | `ap-south-1` |
+  | `CLOUDWATCH_ENABLED` | `true` |
+- Click **Next** $\to$ Review all configurations $\to$ Click **Create & deploy**.
+
+#### Step 5: Verify Live Deployment
+- Deployment takes 3 to 5 minutes as AWS builds the image and spins up the container.
+- Once the status changes to **Running**, App Runner provides a permanent, secure HTTPS URL:
+  `https://<unique-id>.ap-south-1.awsapprunner.com`
+- Test the application using the verification test matrix in [Section 4](#4-testing--verifying-the-live-deployed-application).
+
+---
+
+### 8.4 Phase C: Persistent Audit Storage with Amazon S3 (Optional)
+
+By default, BillGuard writes audit trails and generated petition PDFs to local disk (`data/audit_logs.jsonl`). To enable durable cloud storage in S3:
+
+1. In the AWS Console, search for **S3** and click **Create bucket**.
+2. **Bucket name**: e.g., `billguard-audit-storage-<your-roll-no>`.
+3. **AWS Region**: Select `Asia Pacific (Mumbai) ap-south-1`.
+4. Keep **Block all public access** checked (audits and bills must remain private).
+5. Enable **Bucket encryption** with standard Amazon S3-managed keys (`SSE-S3`) at zero additional cost.
+6. Click **Create bucket**.
+7. In App Runner environment variables, set:
+   ```bash
+   AWS_S3_BUCKET_NAME=billguard-audit-storage-<your-roll-no>
+   ```
+
+---
+
+### 8.5 Phase D: Telemetry & Monitoring with Amazon CloudWatch
+
+1. In the AWS Console, search for **CloudWatch** $\to$ click **Log groups**.
+2. App Runner automatically streams stdout logs to `/aws/apprunner/billguard`.
+3. You can set a CloudWatch metric alarm on `5XX` HTTP response codes or application exceptions:
+   - Metric: `AppRunner/HTTPCode_5XX`
+   - Threshold: `> 0 for 1 datapoint`
+   - Notification: Send alert to your personal email via Amazon SNS.
+
+---
+
 *Authored by: Selvamani (2023510035) & Subramani (2023510024)*  
 *BillGuard Capstone Project — Final Year Engineering*
+

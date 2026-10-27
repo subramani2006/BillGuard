@@ -1,4 +1,4 @@
-# Production-Grade Dockerfile for BillGuard on Microsoft Azure
+# Production-Grade Dockerfile for BillGuard on Amazon Web Services (AWS) & Cloud
 # Base image: Official lightweight Python 3.10 slim on Debian Linux
 FROM python:3.10-slim
 
@@ -37,7 +37,7 @@ COPY .streamlit/ ./.streamlit/
 # Expose Streamlit default port
 EXPOSE 8501
 
-# Container health probe for Azure Container Apps / Docker
+# Container health probe for AWS App Runner / ECS / Docker
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
