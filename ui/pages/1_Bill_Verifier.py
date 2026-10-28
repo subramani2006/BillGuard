@@ -8,6 +8,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import io
+import joblib
 import streamlit as st
 from PIL import Image
 import pandas as pd
@@ -56,7 +57,16 @@ def load_components():
     g_gen = GrievanceGenerator()
     reg = ModelRegistry()
     aud = AuditLogger()
-    f_ext = BillFeatureExtractor()
+    
+    # Load trained feature extractor with fitted normalizer
+    f_ext_p = "./models/feature_extractor.joblib"
+    if os.path.exists(f_ext_p):
+        try:
+            f_ext = joblib.load(f_ext_p)
+        except Exception:
+            f_ext = BillFeatureExtractor()
+    else:
+        f_ext = BillFeatureExtractor()
 
     # Load OCR extractor
     ocr_p = "./models/ocr_crnn_scratch.pth"
@@ -127,33 +137,39 @@ defaults = {
     "arrears": 0.0,
     "tariff_code": "TN_DOMESTIC_LT1A_2024",
     "prev_bill_amt": 1180.0,
+    "hist_units": [280.0, 310.0, 320.0, 290.0, 330.0],
 }
 
 if preset == "Scenario A: Confirmed Arithmetic Overcharge":
     defaults.update({
         "prev_read": 2000.0, "curr_read": 2300.0, "billed_units": 300.0,
         "billed_amt": 1450.0, "prev_bill_amt": 750.0,
+        "hist_units": [280.0, 310.0, 320.0, 290.0, 330.0],
     })
 elif preset == "Scenario B: Extended Billing Cycle (78 Days)":
     defaults.update({
         "prev_date": "2024-05-10", "curr_date": "2024-07-27",  # 78 days
         "prev_read": 3000.0, "curr_read": 3550.0, "billed_units": 550.0,
-        "billed_amt": 2650.0, "prev_bill_amt": 1800.0,
+        "billed_amt": 2477.0, "prev_bill_amt": 1800.0,
+        "hist_units": [400.0, 420.0, 410.0, 390.0, 430.0],
     })
 elif preset == "Scenario C: Verified Normal Lifeline (85 Units)":
     defaults.update({
         "prev_read": 1100.0, "curr_read": 1185.0, "billed_units": 85.0,
         "billed_amt": 0.0, "prev_bill_amt": 0.0,
+        "hist_units": [75.0, 80.0, 85.0, 82.0, 88.0],
     })
 elif preset == "Scenario D: Uncharacteristic Summer Spike (5x Surge)":
     defaults.update({
         "prev_read": 5000.0, "curr_read": 6800.0, "billed_units": 1800.0,
-        "billed_amt": 18500.0, "prev_bill_amt": 2100.0,
+        "billed_amt": 17177.0, "prev_bill_amt": 1180.0,
+        "hist_units": [300.0, 320.0, 290.0, 310.0, 305.0],
     })
 elif preset == "Scenario E: Inverted Reading / Date Typo (Validation Error)":
     defaults.update({
         "prev_read": 4850.0, "curr_read": 4200.0, "billed_units": 0.0,
         "billed_amt": 500.0, "prev_bill_amt": 1100.0,
+        "hist_units": [280.0, 310.0, 320.0, 290.0, 330.0],
     })
 
 tab1, tab2 = st.tabs(["📤 Step 1: Upload Bill Card Image (OCR)", "✍️ Step 1 Alternative: Manual Entry & Field Review"])
@@ -298,7 +314,25 @@ with st.expander("⚙️ Special Conditions & Adjustments (Estimated Readings, M
 st.markdown("---")
 btn_verify = st.button("🚀 Step 3: Run Deterministic Audit & ML Screening", type="primary", use_container_width=True)
 
-if btn_verify or preset != "None (Custom Entry)":
+# Session state management to keep audit results visible across tab clicks and PDF downloads
+if "audit_executed" not in st.session_state:
+    st.session_state["audit_executed"] = False
+
+if btn_verify:
+    st.session_state["audit_executed"] = True
+
+if "last_preset" not in st.session_state:
+    st.session_state["last_preset"] = preset
+elif st.session_state["last_preset"] != preset:
+    st.session_state["last_preset"] = preset
+    if preset != "None (Custom Entry)":
+        st.session_state["audit_executed"] = True
+    else:
+        st.session_state["audit_executed"] = False
+
+should_run_audit = st.session_state["audit_executed"] or preset != "None (Custom Entry)"
+
+if should_run_audit:
     # 1. Run deterministic tariff verification
     bill_input = BillInput(
         consumer_number=consumer_no,
@@ -321,7 +355,7 @@ if btn_verify or preset != "None (Custom Entry)":
     t_result = tariff_engine.calculate_bill(bill_input)
 
     # 2. Run ML Anomaly Screening
-    hist_units = [280.0, 310.0, 320.0, 290.0, 330.0]
+    hist_units = defaults.get("hist_units", [280.0, 310.0, 320.0, 290.0, 330.0])
     hist_mean = float(np.mean(hist_units))
     hist_records = [{"recorded_units": u, "billing_days": 60} for u in hist_units]
     curr_record = {
@@ -334,6 +368,7 @@ if btn_verify or preset != "None (Custom Entry)":
         "arrears_amount": arrears_amt,
     }
     feat_vec = feat_extractor.extract_features_from_history(curr_record, hist_records)
+    feat_vec_norm = feat_extractor.transform(feat_vec.reshape(1, -1))
 
     ml_score = 0.15
     is_ml_anom = False
@@ -341,11 +376,11 @@ if btn_verify or preset != "None (Custom Entry)":
 
     if ml_model is not None:
         try:
-            scores = ml_model.score_samples(feat_vec.reshape(1, -1))
-            preds = ml_model.predict(feat_vec.reshape(1, -1))
+            scores = ml_model.score_samples(feat_vec_norm)
+            preds = ml_model.predict(feat_vec_norm)
             ml_score = float(scores[0])
             is_ml_anom = bool(preds[0] == 1)
-            attributions = ml_model.explain_instance(feat_vec)
+            attributions = ml_model.explain_instance(feat_vec_norm.flatten())
         except Exception:
             pass
 

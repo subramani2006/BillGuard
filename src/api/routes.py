@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from PIL import Image
 import numpy as np
 import pandas as pd
+import joblib
 
 from src.tariff.engine import TariffEngine
 from src.tariff.models import BillInput
@@ -47,7 +48,14 @@ ocr_extractor = BillOcrExtractor()
 baseline_detector = RuleBasedBaselineDetector()
 
 # Lazy loaded ML components
-feature_extractor = BillFeatureExtractor()
+if os.path.exists("./models/feature_extractor.joblib"):
+    try:
+        feature_extractor = joblib.load("./models/feature_extractor.joblib")
+    except Exception:
+        feature_extractor = BillFeatureExtractor()
+else:
+    feature_extractor = BillFeatureExtractor()
+
 iso_forest: Optional[BillIsolationForest] = None
 autoencoder: Optional[BillAutoencoderDetector] = None
 
@@ -131,17 +139,18 @@ def verify_bill(req: BillVerifyRequest):
         "arrears_amount": req.arrears_amount,
     }
 
-    # Extract feature vector
+    # Extract feature vector and transform using fitted normalizer
     feat_vec = feature_extractor.extract_features_from_history(current_record, hist_records)
+    feat_vec_norm = feature_extractor.transform(feat_vec.reshape(1, -1))
 
     ml_model, model_type = get_active_ml_model()
     if ml_model is not None:
         try:
-            scores = ml_model.score_samples(feat_vec.reshape(1, -1))
-            preds = ml_model.predict(feat_vec.reshape(1, -1))
+            scores = ml_model.score_samples(feat_vec_norm)
+            preds = ml_model.predict(feat_vec_norm)
             ml_score = float(scores[0])
             is_ml_anom = bool(preds[0] == 1)
-            attributions = ml_model.explain_instance(feat_vec)
+            attributions = ml_model.explain_instance(feat_vec_norm.flatten())
         except Exception:
             ml_score = 0.20
             is_ml_anom = False
