@@ -33,7 +33,7 @@ st.set_page_config(
 )
 inject_custom_theme()
 
-# Custom Grand CSS Styling
+# Custom CSS Styling
 st.markdown("""
 <style>
     .prod-card {
@@ -43,13 +43,6 @@ st.markdown("""
         padding: 24px;
         color: white;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 16px rgba(56, 189, 248, 0.1);
-    }
-    .gate-card {
-        background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(31, 41, 55, 0.60) 100%);
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
     }
     .metric-badge {
         display: inline-block;
@@ -76,10 +69,34 @@ registry, drift_monitor, audit_logger = load_mlops_resources()
 # Grand Hero Banner
 render_hero_banner(
     title="🛠️ MLOps Governance & Observability Center",
-    subtitle="Continuous Model Governance, Automated Safety Promotion Gates, Data Drift Analytics (PSI & KS-Test), and Immutable Audit Trails.",
+    subtitle="Continuous Model Governance, Automated Safety Promotion Gates, Data Drift Analytics, and Immutable Audit Trails.",
     tag_left="<span class='status-dot'></span> ACTIVE OBSERVABILITY ENGINE",
     tag_right="🛡️ ZERO PRETRAINED WEIGHTS",
 )
+
+# 3-Point Explainer Banner ("What is MLOps in BillGuard?")
+st.markdown("""
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="glass-card" style="padding: 16px;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #38BDF8; margin-bottom: 6px;">🧠 1. Model Governance</div>
+        <div style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5;">
+            Versions and tracks every anomaly model across <b>Candidate</b>, <b>Active Production</b>, and <b>Archived</b> states with full lineage.
+        </div>
+    </div>
+    <div class="glass-card" style="padding: 16px;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #34D399; margin-bottom: 6px;">🛡️ 2. Zero-Regression Gate</div>
+        <div style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5;">
+            Candidate models must pass 3 strict automated safety tests before promotion, guaranteeing no degraded models reach production.
+        </div>
+    </div>
+    <div class="glass-card" style="padding: 16px;">
+        <div style="font-size: 1.1rem; font-weight: 700; color: #FBBF24; margin-bottom: 6px;">📡 3. Data Drift Monitoring</div>
+        <div style="font-size: 0.85rem; color: #CBD5E1; line-height: 1.5;">
+            Tracks seasonal household consumption changes using Population Stability Index (PSI) to alert when retraining is needed.
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # 4 Main Tabs
 tab_gov, tab_drift, tab_retrain, tab_audit = st.tabs([
@@ -95,7 +112,7 @@ tab_gov, tab_drift, tab_retrain, tab_audit = st.tabs([
 # ==============================================================================
 with tab_gov:
     st.markdown("### 🏛️ Model Lifecycle Registry & Automated Safety Gate")
-    st.caption("Active models are staged across Development, Candidate, Production, and Archived tiers. Production promotions must satisfy zero-regression safety gates.")
+    st.caption("Active models are staged across Candidate, Production, and Archived tiers. Production promotions must satisfy automated safety gates.")
 
     prod_model = registry.get_production_model()
 
@@ -106,7 +123,7 @@ with tab_gov:
             <div class="prod-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <span style="font-size: 1.3rem; font-weight: 700; color: #38BDF8;">🟢 PRODUCTION ACTIVE: v{prod_model.version}</span>
-                    <span style="background: #0284C7; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">ACTIVE INFERENCE</span>
+                    <span style="background: #0284C7; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">SERVING PREDICTIONS</span>
                 </div>
                 <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 6px;">{prod_model.model_name}</div>
                 <div style="color: #94A3B8; font-size: 0.9rem; margin-bottom: 16px;">{prod_model.description}</div>
@@ -129,7 +146,7 @@ with tab_gov:
                     </div>
                 </div>
                 <div style="margin-top: 12px; font-size: 0.8rem; color: #64748B;">
-                    Artifact Path: <code>{prod_model.artifact_path}</code> | Promoted At: {prod_model.promoted_at or prod_model.registered_at}
+                    Artifact: <code>{prod_model.artifact_path}</code> | Promoted: {prod_model.promoted_at or prod_model.registered_at}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -138,7 +155,7 @@ with tab_gov:
 
     with col_p2:
         st.markdown("#### 🛡️ Emergency Model Operations")
-        st.markdown("If real-world drift or regressions are identified in production inference, the safety gate enables one-click restoration of the previously certified production checkpoint.")
+        st.markdown("If real-world data drift or accuracy regression occurs, the system provides an instant 1-click rollback to the previously certified checkpoint.")
         
         if st.button("⏪ Instant 1-Click Rollback to Previous Version", type="secondary", use_container_width=True):
             success, msg = registry.rollback_production()
@@ -150,7 +167,7 @@ with tab_gov:
 
         archived_count = len([v for v in registry.versions if v.stage == "ARCHIVED"])
         candidate_count = len([v for v in registry.versions if v.stage == "CANDIDATE"])
-        st.info(f"**Registry Inventory:**\n- 🟢 Production: 1 Active\n- 🟡 Candidates: {candidate_count}\n- 📦 Archived Standby: {archived_count}")
+        st.info(f"**Model Registry Inventory:**\n- 🟢 Active Production: 1\n- 🟡 Candidate Models: {candidate_count}\n- 📦 Archived Backups: {archived_count}")
 
     st.markdown("---")
     st.markdown("#### 📋 Staged Model Inventory Table")
@@ -160,7 +177,7 @@ with tab_gov:
         v_data.append({
             "Version": f"v{v.version}",
             "Model Name": v.model_name,
-            "Stage": stage_chip,
+            "Deployment Stage": stage_chip,
             "F1-Score": f"{v.metrics.get('f1_score', 0.0):.3f}" if v.metrics.get('f1_score') else "-",
             "Precision": f"{v.metrics.get('precision', 0.0):.3f}" if v.metrics.get('precision') else "-",
             "Recall": f"{v.metrics.get('recall', 0.0):.3f}" if v.metrics.get('recall') else "-",
@@ -174,8 +191,10 @@ with tab_gov:
     if candidates:
         st.markdown("---")
         st.markdown("### 🚀 Automated Candidate Promotion Gate")
+        st.caption("Select a newly trained Candidate model. The automated gate runs 3 safety tests before permitting promotion to Production.")
+
         cand_choice = st.selectbox(
-            "Select Candidate Model to Evaluate for Promotion",
+            "Select Candidate Model to Evaluate",
             [f"v{c.version}: {c.model_name} (F1: {c.metrics.get('f1_score', 0.0):.3f})" for c in candidates]
         )
         cand_ver = int(cand_choice.split(":")[0].replace("v", ""))
@@ -192,7 +211,7 @@ with tab_gov:
             pass_f1 = c_f1 >= 0.75
             st.markdown(f"""
             <div class="glass-card" style="padding: 14px; text-align: center;">
-                <div class="card-label">Gate 1: Min F1 (≥ 0.75)</div>
+                <div class="card-label">Test 1: Minimum Accuracy (F1 ≥ 0.75)</div>
                 <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_f1 else 'badge-fail'}'>{'✅ PASS: ' if pass_f1 else '❌ FAIL: '}{c_f1:.3f}</span></div>
             </div>
             """, unsafe_allow_html=True)
@@ -200,7 +219,7 @@ with tab_gov:
             pass_prec = c_prec >= 0.70
             st.markdown(f"""
             <div class="glass-card" style="padding: 14px; text-align: center;">
-                <div class="card-label">Gate 2: Precision (≥ 0.70)</div>
+                <div class="card-label">Test 2: False Alarm Guard (Precision ≥ 0.70)</div>
                 <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_prec else 'badge-fail'}'>{'✅ PASS: ' if pass_prec else '❌ FAIL: '}{c_prec:.3f}</span></div>
             </div>
             """, unsafe_allow_html=True)
@@ -208,7 +227,7 @@ with tab_gov:
             pass_comp = c_f1 >= p_f1
             st.markdown(f"""
             <div class="glass-card" style="padding: 14px; text-align: center;">
-                <div class="card-label">Gate 3: Exceeds Prod F1 ({p_f1:.3f})</div>
+                <div class="card-label">Test 3: Outperforms Active Production ({p_f1:.3f})</div>
                 <div style="margin-top: 6px;"><span class='metric-badge {'badge-pass' if pass_comp else 'badge-fail'}'>{'✅ PASS: ' if pass_comp else '❌ FAIL: '}{c_f1:.3f} ≥ {p_f1:.3f}</span></div>
             </div>
             """, unsafe_allow_html=True)
@@ -221,7 +240,7 @@ with tab_gov:
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="font-size: 1.8rem;">🎉</div>
                     <div>
-                        <div style="font-size: 1.05rem; font-weight: 700; color: #34D399;">Promotion Safety Gate Certified: All Criteria Satisfied</div>
+                        <div style="font-size: 1.05rem; font-weight: 700; color: #34D399;">Safety Gate Certified: Safe to Promote to Production</div>
                         <div style="font-size: 0.9rem; color: #CBD5E1; margin-top: 2px;">{reason}</div>
                     </div>
                 </div>
@@ -253,16 +272,15 @@ with tab_gov:
 
 
 # ==============================================================================
-# TAB 2: DATA DRIFT & DISTRIBUTION SHIFTS (GRAND VISUALS)
+# TAB 2: DATA DRIFT & DISTRIBUTION SHIFTS
 # ==============================================================================
 with tab_drift:
     st.markdown("### 📈 Continuous Data Drift & Feature Distribution Shifts")
-    st.caption("Monitoring real-world consumption variance using Population Stability Index (PSI) and Two-Sample Kolmogorov-Smirnov (KS) statistical tests.")
+    st.caption("Monitoring real-world consumption variance using Population Stability Index (PSI) to detect seasonal shifts or changes in consumer habits.")
 
     train_p = Path("./data/synthetic/train_bills.csv")
     test_p = Path("./data/synthetic/test_bills.csv")
 
-    # Defensive loading: Ensure baseline and current dataframes are always populated
     if not train_p.exists() or not test_p.exists():
         with st.spinner("Generating initial baseline datasets for drift comparison..."):
             gen = SyntheticBillGenerator(seed=42)
@@ -274,20 +292,19 @@ with tab_drift:
     drift_report = drift_monitor.evaluate_feature_drift(df_base, df_curr)
     qual_report = drift_monitor.evaluate_data_quality(df_curr)
 
-    # Top KPI Metrics with Grand Visual Gauges
+    # Top KPI Metrics
     kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
 
     with kpi_col1:
         st.metric(
             "Overall Drift Verdict",
-            drift_report["overall_status"].replace("_", " "),
-            delta="Healthy" if drift_report["overall_status"] == "NORMAL" else "Attention Required",
-            delta_color="normal" if drift_report["overall_status"] == "NORMAL" else "inverse"
+            "🟢 Healthy" if drift_report["overall_status"] == "NORMAL" else "🟡 Moderate Drift",
+            delta="Baseline Matched" if drift_report["overall_status"] == "NORMAL" else "Attention Required"
         )
     with kpi_col2:
-        st.metric("Max Feature PSI", f"{drift_report['max_psi']:.4f}", delta="Threshold: < 0.25")
+        st.metric("Max Feature PSI", f"{drift_report['max_psi']:.4f}", delta="Safe Threshold: < 0.10")
     with kpi_col3:
-        st.metric("Drifted Features", f"{drift_report['drift_detected_features_count']} / {drift_report['total_monitored_features']}")
+        st.metric("Drifted Features", f"{drift_report['drift_detected_features_count']} of {drift_report['total_monitored_features']}", delta="Features in Safe Zone")
     with kpi_col4:
         st.metric("Data Quality Score", f"{qual_report['data_quality_score'] * 100:.0f}%", delta="Clean Bounds")
 
@@ -296,7 +313,7 @@ with tab_drift:
     chart_col1, chart_col2 = st.columns([1.2, 0.8])
 
     with chart_col1:
-        st.markdown("#### 📊 Feature Population Stability Index (PSI)")
+        st.markdown("#### 📊 Feature Stability Index (PSI)")
         feats = list(drift_report["features"].keys())
         psi_vals = [d["psi"] for d in drift_report["features"].values()]
         colors_list = []
@@ -316,11 +333,11 @@ with tab_drift:
             text=[f"PSI: {p:.3f}" for p in psi_vals],
             textposition='auto',
         ))
-        fig_psi.add_vline(x=0.10, line_dash="dash", line_color="#F59E0B", annotation_text="Warning (0.10)", annotation_position="top right")
+        fig_psi.add_vline(x=0.10, line_dash="dash", line_color="#F59E0B", annotation_text="Warning Threshold (0.10)", annotation_position="top right")
         fig_psi.add_vline(x=0.25, line_dash="dash", line_color="#EF4444", annotation_text="Critical Drift (0.25)", annotation_position="top right")
         fig_psi.update_layout(
             xaxis_title="Population Stability Index (PSI)",
-            yaxis_title="Monitored Feature",
+            yaxis_title="Monitored Consumption Feature",
             margin=dict(l=20, r=20, t=30, b=20),
         )
         fig_psi = get_plotly_dark_theme(fig_psi, height=320)
@@ -334,32 +351,28 @@ with tab_drift:
                 How Drift Monitoring Protects Consumers
             </div>
             <div style="font-size: 0.88rem; color: #CBD5E1; margin-bottom: 12px;">
-                Over time, household electricity usage changes due to new appliances, weather, or seasonal shifts. 
-                BillGuard continuously measures <b>Population Stability Index (PSI)</b> to check if models need retraining:
+                When weather changes (e.g. May peak summer AC usage), household electricity consumption naturally rises. 
+                BillGuard continuously measures <b>Population Stability Index (PSI)</b> so it can distinguish real summer heat from actual billing defects:
             </div>
             <div style="font-size: 0.85rem; line-height: 1.8;">
-                • <span style="color: #34D399; font-weight: 700;">🟢 PSI &lt; 0.10 (Healthy):</span> Consumption matches training baseline. Model predictions are highly reliable.<br/>
-                • <span style="color: #FBBF24; font-weight: 700;">🟡 0.10 ≤ PSI &lt; 0.25 (Moderate):</span> Mild behavioral shift (e.g., seasonal change). Continues monitoring.<br/>
-                • <span style="color: #F87171; font-weight: 700;">🔴 PSI ≥ 0.25 (Critical):</span> Significant shift. Triggers retraining alert to prevent false anomaly flags.
-            </div>
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(148, 163, 184, 0.15); font-size: 0.85rem; color: #94A3B8;">
-                Current Data Integrity: <b style="color: #38BDF8;">{qual_report['data_quality_score'] * 100:.0f}% Clean Bounds</b>
+                • <span style="color: #34D399; font-weight: 700;">🟢 PSI &lt; 0.10 (Healthy):</span> Consumption matches training baseline. Models are accurate.<br/>
+                • <span style="color: #FBBF24; font-weight: 700;">🟡 0.10 ≤ PSI &lt; 0.25 (Moderate):</span> Mild seasonal shift. Continues monitoring.<br/>
+                • <span style="color: #F87171; font-weight: 700;">🔴 PSI ≥ 0.25 (Critical):</span> Significant shift. Alerts team to retrain models.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     # Detailed Statistical Audit Table
-    st.markdown("#### 📋 Detailed Feature Drift & KS Statistical Metrics")
+    st.markdown("#### 📋 Feature Drift Diagnostic Summary")
     f_rows = []
     for feat, d in drift_report["features"].items():
         f_rows.append({
-            "Feature Name": feat,
+            "Monitored Feature": feat,
             "PSI Score": f"{d['psi']:.4f}",
-            "Severity Zone": f"🔴 {d['severity']}" if d["severity"] == "CRITICAL" else ("🟡 " + d["severity"] if d["severity"] == "WARNING" else "🟢 Healthy"),
-            "KS Statistic": f"{d['ks_statistic']:.4f}",
-            "KS p-value": f"{d['ks_pvalue']:.4f}",
-            "Baseline Mean ± Std": f"{d['baseline_mean']:.1f} ± {d['baseline_std']:.1f}",
-            "Current Mean ± Std": f"{d['current_mean']:.1f} ± {d['current_std']:.1f}",
+            "Drift Status": f"🔴 Critical Drift" if d["severity"] == "CRITICAL" else ("🟡 Moderate Shift" if d["severity"] == "WARNING" else "🟢 Healthy (No Drift)"),
+            "Baseline Average": f"{d['baseline_mean']:.1f}",
+            "Current Consumer Average": f"{d['current_mean']:.1f}",
+            "Statistical Test": "KS Two-Sample"
         })
     st.dataframe(pd.DataFrame(f_rows), hide_index=True, use_container_width=True)
 
@@ -419,7 +432,7 @@ with tab_retrain:
 
         st.success(f"🎉 **Retraining Finished!** New Candidate Model **v{cand.version}** registered in Model Registry.")
 
-        # Grand Visual: Comparison Bar Chart across Models
+        # Benchmark Comparison Chart
         st.markdown("#### 📊 Candidate Benchmark Metrics Comparison")
         comp_df = pd.DataFrame([
             {"Model": "Rule Baseline", **benchmarks["baseline"]},
