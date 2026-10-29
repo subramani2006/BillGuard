@@ -110,17 +110,19 @@ for t in official_tariffs:
 for t in simulated_tariffs:
     tariff_options[t["tariff_code"]] = f"🔬 {t['tariff_name']} (Simulated Research)"
 
-# Preset Scenarios
-preset = st.sidebar.selectbox(
-    "Load Preset Demonstration Scenario",
+# Prominent Demonstration Presets Bar
+st.markdown("### 🎯 Quick Demonstration Scenarios (Select to Test Instantly)")
+preset = st.selectbox(
+    "Choose a verified test case to demonstrate the audit engine:",
     [
-        "None (Custom Entry)",
-        "Scenario A: Confirmed Arithmetic Overcharge",
-        "Scenario B: Extended Billing Cycle (78 Days)",
-        "Scenario C: Verified Normal Lifeline (85 Units)",
+        "Scenario A: Confirmed Arithmetic Overcharge (₹875 Error)",
+        "Scenario B: Extended Billing Cycle (78 Days Delay)",
+        "Scenario C: Verified Normal Lifeline (85 Units - 100% Free)",
         "Scenario D: Uncharacteristic Summer Spike (5x Surge)",
-        "Scenario E: Inverted Reading / Date Typo (Validation Error)",
-    ]
+        "Scenario E: Inverted Reading / Typo (Data Validation Error)",
+        "None (Custom Entry / OCR Upload)",
+    ],
+    index=0
 )
 
 # Preset defaults
@@ -140,32 +142,32 @@ defaults = {
     "hist_units": [280.0, 310.0, 320.0, 290.0, 330.0],
 }
 
-if preset == "Scenario A: Confirmed Arithmetic Overcharge":
+if "Scenario A" in preset:
     defaults.update({
         "prev_read": 2000.0, "curr_read": 2300.0, "billed_units": 300.0,
         "billed_amt": 1450.0, "prev_bill_amt": 750.0,
         "hist_units": [280.0, 310.0, 320.0, 290.0, 330.0],
     })
-elif preset == "Scenario B: Extended Billing Cycle (78 Days)":
+elif "Scenario B" in preset:
     defaults.update({
         "prev_date": "2024-05-10", "curr_date": "2024-07-27",  # 78 days
         "prev_read": 3000.0, "curr_read": 3550.0, "billed_units": 550.0,
         "billed_amt": 2477.0, "prev_bill_amt": 1800.0,
         "hist_units": [400.0, 420.0, 410.0, 390.0, 430.0],
     })
-elif preset == "Scenario C: Verified Normal Lifeline (85 Units)":
+elif "Scenario C" in preset:
     defaults.update({
         "prev_read": 1100.0, "curr_read": 1185.0, "billed_units": 85.0,
         "billed_amt": 0.0, "prev_bill_amt": 0.0,
         "hist_units": [75.0, 80.0, 85.0, 82.0, 88.0],
     })
-elif preset == "Scenario D: Uncharacteristic Summer Spike (5x Surge)":
+elif "Scenario D" in preset:
     defaults.update({
         "prev_read": 5000.0, "curr_read": 6800.0, "billed_units": 1800.0,
         "billed_amt": 17177.0, "prev_bill_amt": 1180.0,
         "hist_units": [300.0, 320.0, 290.0, 310.0, 305.0],
     })
-elif preset == "Scenario E: Inverted Reading / Date Typo (Validation Error)":
+elif "Scenario E" in preset:
     defaults.update({
         "prev_read": 4850.0, "curr_read": 4200.0, "billed_units": 0.0,
         "billed_amt": 500.0, "prev_bill_amt": 1100.0,
@@ -325,12 +327,12 @@ if "last_preset" not in st.session_state:
     st.session_state["last_preset"] = preset
 elif st.session_state["last_preset"] != preset:
     st.session_state["last_preset"] = preset
-    if preset != "None (Custom Entry)":
+    if "None" not in preset:
         st.session_state["audit_executed"] = True
     else:
         st.session_state["audit_executed"] = False
 
-should_run_audit = st.session_state["audit_executed"] or preset != "None (Custom Entry)"
+should_run_audit = st.session_state["audit_executed"] or ("None" not in preset)
 
 if should_run_audit:
     # 1. Run deterministic tariff verification
@@ -479,165 +481,75 @@ if should_run_audit:
             f"✅ **Bill Verified Correct**: Your billed amount of **{format_currency(billed_amt)}** precisely matches the official TNERC tariff calculation of **{format_currency(t_result.calculated_grand_total)}**."
         )
 
-    # Check Statuses Table (Passed, Failed, Not Performed)
-    st.markdown("### 📋 Verification Checks Summary (Step 6)")
-    check_rows = []
-    for c in report.audit_checks:
-        check_rows.append({
-            "Verification Check": c.check_name,
-            "Status": get_check_status_badge(c.status),
-            "Findings & Audit Details": c.details
-        })
-    st.write(
-        pd.DataFrame(check_rows).to_html(escape=False, index=False),
-        unsafe_allow_html=True
-    )
-    st.markdown("<br/>", unsafe_allow_html=True)
-
-    # 10-Point Evidence Investigation Report
-    st.markdown("### 🔍 Evidence-Based Investigation Breakdown")
-    col_rep1, col_rep2 = st.columns(2)
-
-    with col_rep1:
-        st.markdown(f"""
-        <div class="glass-card">
-            <h5 style="color: #38BDF8; margin-top: 0; margin-bottom: 12px;">📊 Readings, Consumption & Cycle</h5>
-            <div style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.8;">
-                <div><b>1. Bill Comparison:</b></div>
-                <div style="padding-left: 14px;">
-                    • Previous Bill: <b>{format_currency(report.previous_bill_amount)}</b><br/>
-                    • Current Billed: <b>{format_currency(report.current_bill_amount)}</b><br/>
-                    • Bill Amount Change: <b>{f'{report.bill_amount_pct_change:+.1f}%' if report.bill_amount_pct_change is not None else 'N/A'}</b>
-                </div>
-                <div style="margin-top: 8px;"><b>2. Meter Readings & Consumption:</b></div>
-                <div style="padding-left: 14px;">
-                    • Previous Reading: <b>{report.previous_meter_reading:.1f}</b><br/>
-                    • Current Reading: <b>{report.current_meter_reading:.1f}</b><br/>
-                    • Calculated Units: <b>{report.calculated_units:.1f} kWh</b><br/>
-                    • Billed Units on Slip: <b>{report.billed_units if report.billed_units is not None else 'N/A'} kWh</b>
-                </div>
-                <div style="margin-top: 8px;"><b>3. Billing Cycle & Tariff:</b></div>
-                <div style="padding-left: 14px;">
-                    • Billing Period: <b>{report.billing_period_days} Days</b> ({'⚠️ Extended Delay' if report.billing_period_days > 65 else 'Standard bi-monthly'})<br/>
-                    • Tariff Version: <b>{report.applicable_tariff_name}</b>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_rep2:
-        st.markdown(f"""
-        <div class="glass-card">
-            <h5 style="color: #34D399; margin-top: 0; margin-bottom: 12px;">🏛️ Statutory Tariff Assessment & Discrepancies</h5>
-            <div style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.8;">
-                <div><b>4. Statutory Assessment & Discrepancies:</b></div>
-                <div style="padding-left: 14px;">
-                    • Independently Calculated: <b>{format_currency(report.independently_calculated_amount)}</b><br/>
-                    • Slab Net Energy Charge: <b>{format_currency(t_result.energy_charge_net)}</b><br/>
-                    • GoTN 100-Unit Subsidy: <b>{format_currency(t_result.subsidy_amount)}</b><br/>
-                    • FPPCA Fuel Surcharge: <b>{format_currency(t_result.fppca_amount)}</b><br/>
-                    • Past Arrears Assessed: <b>{format_currency(t_result.arrears_amount)}</b><br/>
-                    • Net Mathematical Discrepancy: <b style="color: {'#EF4444' if abs(report.discrepancy_amount or 0) > 1 else '#34D399'};">{format_currency(report.discrepancy_amount)}</b>
-                </div>
-                <div style="margin-top: 8px;"><b>5. Regulatory Consistency:</b></div>
-                <div style="padding-left: 14px;">
-                    • Verification Status: <b>{'Compliant' if t_result.is_valid and abs(report.discrepancy_amount or 0) <= 1 else 'Discrepancy / Attention Needed'}</b>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br/>", unsafe_allow_html=True)
-
-    # Itemized Discrepancy Table
-    st.markdown("##### 🧮 Itemized Discrepancy Reconciliation")
-    disc_df = pd.DataFrame([
-        {"Item": "Consumption Unit Discrepancy", "Discrepancy Value": f"{report.itemized_discrepancies.get('units_discrepancy_kwh', 0.0):+.1f} kWh"},
-        {"Item": "Tariff Slab Assessment Discrepancy", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('tariff_slab_discrepancy_inr', 0.0))},
-        {"Item": "Arrears Appended to Bill", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('arrears_billed_inr', 0.0))},
-        {"Item": "Additional Charges / Taxes", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('additional_charges_inr', 0.0))},
-        {"Item": "Total Net Discrepancy (billed - calculated)", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('total_net_discrepancy_inr', 0.0))},
+    # 3 Clean Core Tabs for Demo
+    res_tab1, res_tab2, res_tab3 = st.tabs([
+        "🧮 Statutory Slab Calculation",
+        "🗣️ Bilingual Findings & Advice",
+        "📝 Official Grievance Petition (PDF)"
     ])
-    st.dataframe(disc_df, hide_index=True, use_container_width=True)
 
-    # Possible Explanations & Missing Evidence
-    col_exp1, col_exp2 = st.columns(2)
-    with col_exp1:
-        expl_list = "".join([f"<li style='margin-bottom: 6px;'>{pe}</li>" for pe in report.possible_explanations])
-        st.markdown(f"""
-        <div class="glass-card">
-            <h5 style="color: #FBBF24; margin-top: 0; margin-bottom: 10px;">💡 Evidence-Supported Possible Explanations</h5>
-            <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
-                {expl_list}
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with res_tab1:
+        st.markdown("#### 📋 Statutory Slab-by-Slab Tariff Breakdown (TNERC LT-1A)")
+        slab_rows = []
+        for s in t_result.slab_breakdown:
+            slab_rows.append({
+                "Slab (Units)": s.slab_label,
+                "Units in Slab": s.units_in_slab,
+                "Gross Rate (₹)": f"₹{s.gross_rate:.2f}",
+                "Gross Total": format_currency(s.gross_amount),
+                "GoTN Subsidy Rate": f"₹{s.subsidy_rate:.2f}",
+                "Total Subsidy": format_currency(s.subsidy_amount),
+                "Net Rate (₹)": f"₹{s.net_rate:.2f}",
+                "Net Payable": format_currency(s.net_amount),
+            })
+        st.dataframe(pd.DataFrame(slab_rows), hide_index=True, use_container_width=True)
 
-    with col_exp2:
-        miss_list = "".join([f"<li style='margin-bottom: 6px;'>{me}</li>" for me in report.missing_evidence_and_recommended_checks])
-        st.markdown(f"""
-        <div class="glass-card">
-            <h5 style="color: #38BDF8; margin-top: 0; margin-bottom: 10px;">🔎 Missing Evidence & Recommended Verifications</h5>
-            <ul style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.6; padding-left: 18px; margin-bottom: 0;">
-                {miss_list}
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("#### 🧮 Itemized Discrepancy Reconciliation")
+        disc_df = pd.DataFrame([
+            {"Item": "Consumption Unit Discrepancy", "Discrepancy Value": f"{report.itemized_discrepancies.get('units_discrepancy_kwh', 0.0):+.1f} kWh"},
+            {"Item": "Tariff Slab Assessment Discrepancy", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('tariff_slab_discrepancy_inr', 0.0))},
+            {"Item": "Arrears Appended to Bill", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('arrears_billed_inr', 0.0))},
+            {"Item": "Additional Charges / Taxes", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('additional_charges_inr', 0.0))},
+            {"Item": "Total Net Discrepancy (billed - calculated)", "Discrepancy Value": format_currency(report.itemized_discrepancies.get('total_net_discrepancy_inr', 0.0))},
+        ])
+        st.dataframe(disc_df, hide_index=True, use_container_width=True)
 
-    # Bilingual Explanations Tabs (Step 4 & 5)
-    st.markdown("---")
-    st.markdown("### 🗣️ Bilingual Findings & Recommended Actions")
-    exp_tab_en, exp_tab_ta = st.tabs(["🇬🇧 Simple English Explanation", "🇮🇳 எளிய தமிழ் விளக்கம்"])
+    with res_tab2:
+        exp_tab_en, exp_tab_ta = st.tabs(["🇬🇧 English Findings", "🇮🇳 தமிழ் விளக்கம்"])
+        with exp_tab_en:
+            st.markdown(f"**Audit Summary:** {report.english_summary}")
+            st.markdown("**Verifiable Evidence Points:**")
+            for ev in report.evidence_points_en:
+                st.markdown(f"- {ev}")
+            st.success(f"📌 **Conclusion & Next Steps:** {report.conclusion_and_next_steps}")
+            st.info(f"💡 **Recommended Action:** {report.recommended_action_en}")
 
-    with exp_tab_en:
-        st.markdown(f"**Audit Summary:** {report.english_summary}")
-        st.markdown("**Verifiable Evidence Points:**")
-        for ev in report.evidence_points_en:
-            st.markdown(f"- {ev}")
-        st.success(f"📌 **Conclusion & Next Steps:** {report.conclusion_and_next_steps}")
-        st.info(f"💡 **Recommended Action:** {report.recommended_action_en}")
+        with exp_tab_ta:
+            st.markdown(f"**தணிக்கை விளக்கம்:** {report.tamil_summary}")
+            st.markdown("**உறுதிப்படுத்தப்பட்ட ஆதாரங்கள்:**")
+            for ev in report.evidence_points_ta:
+                st.markdown(f"- {ev}")
+            st.success(f"📌 **முடிவு மற்றும் அடுத்த கட்ட நடவடிக்கை:** {report.conclusion_and_next_steps_ta}")
+            st.info(f"💡 **பரிந்துரைக்கப்படும் நடவடிக்கை:** {report.recommended_action_ta}")
 
-    with exp_tab_ta:
-        st.markdown(f"**தணிக்கை விளக்கம்:** {report.tamil_summary}")
-        st.markdown("**உறுதிப்படுத்தப்பட்ட ஆதாரங்கள்:**")
-        for ev in report.evidence_points_ta:
-            st.markdown(f"- {ev}")
-        st.success(f"📌 **முடிவு மற்றும் அடுத்த கட்ட நடவடிக்கை:** {report.conclusion_and_next_steps_ta}")
-        st.info(f"💡 **பரிந்துரைக்கப்படும் நடவடிக்கை:** {report.recommended_action_ta}")
+        if report.possible_explanations:
+            st.markdown("---")
+            st.markdown("##### 💡 Evidence-Supported Possible Explanations")
+            for pe in report.possible_explanations:
+                st.markdown(f"- {pe}")
 
-    # Itemized Slab Breakdown Table
-    st.markdown("### 📋 Statutory Slab-by-Slab Calculation Breakdown")
-    slab_rows = []
-    for s in t_result.slab_breakdown:
-        slab_rows.append({
-            "Slab (Units)": s.slab_label,
-            "Units in Slab": s.units_in_slab,
-            "Gross Rate (₹)": f"₹{s.gross_rate:.2f}",
-            "Gross Total": format_currency(s.gross_amount),
-            "GoTN Subsidy Rate": f"₹{s.subsidy_rate:.2f}",
-            "Total Subsidy": format_currency(s.subsidy_amount),
-            "Net Rate (₹)": f"₹{s.net_rate:.2f}",
-            "Net Payable": format_currency(s.net_amount),
-        })
-    st.dataframe(pd.DataFrame(slab_rows), hide_index=True, use_container_width=True)
+    with res_tab3:
+        st.markdown("#### 📝 Official TANGEDCO Representation & Grievance Petition")
+        st.caption("A legally formal representation petition citing TNERC tariff orders and Tamil Nadu Electricity Distribution Code (Clause 11). Ready to download and submit.")
 
-    # Formal Grievance Letter Section (Step 7)
-    st.markdown("---")
-    st.markdown("### 📝 Formal TANGEDCO Representation & Grievance Petition (Step 7)")
-    st.caption("A legally formal representation petition citing TNERC tariff orders and Tamil Nadu Electricity Distribution Code (Clause 11). Ready to submit to your local Section Officer.")
+        petition_txt = grievance_gen.generate_complaint_text(
+            consumer_number=consumer_no,
+            consumer_name=consumer_name,
+            section_office=section_office,
+            tariff_result=t_result,
+            explanation=report,
+        )
 
-    petition_txt = grievance_gen.generate_complaint_text(
-        consumer_number=consumer_no,
-        consumer_name=consumer_name,
-        section_office=section_office,
-        tariff_result=t_result,
-        explanation=report,
-    )
-
-    with st.expander("📄 View & Download Formal Representation Draft", expanded=(report.is_anomaly)):
-        st.text_area("Petition Draft", petition_txt, height=280)
-
-        # Generate PDF
         pdf_temp = f"./data/temp_grievance_{consumer_no.replace('-', '_')}.pdf"
         grievance_gen.generate_complaint_pdf(
             output_filepath=pdf_temp,
@@ -650,14 +562,6 @@ if should_run_audit:
 
         col_d1, col_d2 = st.columns(2)
         with col_d1:
-            st.download_button(
-                "📥 Download Petition as Text (.txt)",
-                data=petition_txt,
-                file_name=f"TANGEDCO_Representation_{consumer_no}.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
-        with col_d2:
             if os.path.exists(pdf_temp):
                 with open(pdf_temp, "rb") as f:
                     pdf_bytes = f.read()
@@ -666,31 +570,43 @@ if should_run_audit:
                     data=pdf_bytes,
                     file_name=f"TANGEDCO_Representation_{consumer_no}.pdf",
                     mime="application/pdf",
+                    type="primary",
                     use_container_width=True
                 )
+        with col_d2:
+            st.download_button(
+                "📥 Download Petition as Text (.txt)",
+                data=petition_txt,
+                file_name=f"TANGEDCO_Representation_{consumer_no}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
 
-    # Official Dispute & Complaint Channels (Step 8)
-    st.markdown("---")
-    st.markdown("### 🏛️ Official TANGEDCO Complaint & Dispute Resolution Channels (Step 8)")
-    st.markdown(
-        """
-        If this audit indicates an arithmetic discrepancy or an uncharacteristic surge requiring physical investigation,
-        you may register a formal grievance through the statutory dispute mechanisms:
+        with st.expander("👁️ Preview Formal Representation Draft", expanded=False):
+            st.text_area("Petition Draft", petition_txt, height=220)
 
-        1. **Local Section Office (Primary Level):**
-           - **Contact:** Assistant Executive Engineer (AEE) / Section Officer (O&M), Section Office: `{section_office}`.
-           - **Statutory Reference:** Clause 11 of Tamil Nadu Electricity Distribution Code (Rectification of Accounts).
+        with st.expander("🏛️ Statutory Escalation Channels & Authorities"):
+            st.markdown(f"""
+            1. **Local Section Office:** Assistant Executive Engineer (AEE) / Section Officer, Section: `{section_office}`.
+            2. **Consumer Grievance Redressal Forum (CGRF):** Under Section 42(5) of the Electricity Act 2003 at Superintending Engineer (SE) office.
+            3. **Centralized Digital Helpline:** Minnagam 24x7 Customer Care Helpline — Dial `1912` (Toll-Free).
+            4. **Check-Meter Testing:** Right to demand parallel check meter testing under CEA Regulations 2006 Rule 57.
+            """)
 
-        2. **Consumer Grievance Redressal Forum (CGRF):**
-           - Established under Section 42(5) of the Electricity Act 2003 and TNERC CGRF Regulations 2004.
-           - CGRF operates at every TANGEDCO Electricity Distribution Circle headed by the Superintending Engineer (SE).
-           - Representation may be submitted in writing along with the downloaded PDF petition.
-
-        3. **Centralized Digital Grievance Portal & Helpline:**
-           - **TANGEDCO Consumer Portal:** [https://www.tangedco.gov.in](https://www.tangedco.gov.in)
-           - **Minnagam 24x7 Customer Care Helpline:** Dial `1912` (Toll-Free statewide).
-
-        4. **Official Meter Accuracy Testing:**
-           - If an unexplained surge is suspected, consumers have the legal right under **Rule 57 of the Central Electricity Authority (Installation and Operation of Meters) Regulations 2006** to demand an official parallel check-meter test upon payment of the prescribed testing fee.
-        """.format(section_office=section_office)
-    )
+    # Deep-Dive Expander for Technical Examiners
+    with st.expander("🔍 Deep-Dive Regulatory & MLOps Verification Checklist (6 Checks)"):
+        check_rows = []
+        for c in report.audit_checks:
+            check_rows.append({
+                "Verification Check": c.check_name,
+                "Status": get_check_status_badge(c.status),
+                "Findings & Audit Details": c.details
+            })
+        st.write(
+            pd.DataFrame(check_rows).to_html(escape=False, index=False),
+            unsafe_allow_html=True
+        )
+        if report.missing_evidence_and_recommended_checks:
+            st.markdown("**Recommended Verifications:**")
+            for me in report.missing_evidence_and_recommended_checks:
+                st.markdown(f"- {me}")
