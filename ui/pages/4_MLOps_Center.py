@@ -291,9 +291,9 @@ with tab_drift:
     with kpi_col4:
         st.metric("Data Quality Score", f"{qual_report['data_quality_score'] * 100:.0f}%", delta="Clean Bounds")
 
-    # Grand Visual: Plotly Gauge for Data Quality & Bar Chart for PSI
+    # Visual Feature Drift Monitor & Interpretation
     st.markdown("---")
-    chart_col1, chart_col2 = st.columns([1.3, 0.7])
+    chart_col1, chart_col2 = st.columns([1.2, 0.8])
 
     with chart_col1:
         st.markdown("#### 📊 Feature Population Stability Index (PSI)")
@@ -327,65 +327,26 @@ with tab_drift:
         st.plotly_chart(fig_psi, use_container_width=True)
 
     with chart_col2:
-        st.markdown("#### 🎯 Overall Health Gauge")
-        fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=qual_report['data_quality_score'] * 100,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Data Quality Integrity", 'font': {'size': 15, 'color': '#CBD5E1'}},
-            number={'font': {'color': '#38BDF8', 'size': 36}},
-            gauge={
-                'axis': {'range': [0, 100], 'tickcolor': '#64748B'},
-                'bar': {'color': "#38BDF8"},
-                'bgcolor': '#111827',
-                'bordercolor': '#1E293B',
-                'steps': [
-                    {'range': [0, 60], 'color': "rgba(239, 68, 68, 0.25)"},
-                    {'range': [60, 85], 'color': "rgba(245, 158, 11, 0.25)"},
-                    {'range': [85, 100], 'color': "rgba(16, 185, 129, 0.25)"},
-                ],
-            }
-        ))
-        fig_gauge.update_layout(
-            paper_bgcolor="#0B0F19",
-            plot_bgcolor="#111827",
-            font=dict(family="Inter, sans-serif", color="#E2E8F0"),
-            margin=dict(l=20, r=20, t=30, b=20),
-            height=320
-        )
-        st.plotly_chart(fig_gauge, use_container_width=True)
-
-    # Interactive Distribution Comparison Overlay
-    st.markdown("#### 🔬 Interactive Feature Distribution Overlay (Baseline vs. Current)")
-    selected_drift_feat = st.selectbox("Select Feature to Inspect Distribution Shift", feats)
-
-    if selected_drift_feat:
-        base_vals = df_base[selected_drift_feat].dropna()
-        curr_vals = df_curr[selected_drift_feat].dropna()
-
-        fig_dist = go.Figure()
-        fig_dist.add_trace(go.Histogram(
-            x=base_vals,
-            name="Baseline (Training Data)",
-            opacity=0.6,
-            marker_color="#38BDF8",
-            nbinsx=30,
-        ))
-        fig_dist.add_trace(go.Histogram(
-            x=curr_vals,
-            name="Current (Inference Window)",
-            opacity=0.6,
-            marker_color="#EC4899",
-            nbinsx=30,
-        ))
-        fig_dist.update_layout(
-            barmode='overlay',
-            xaxis_title=selected_drift_feat,
-            yaxis_title="Count",
-            margin=dict(l=20, r=20, t=20, b=20),
-        )
-        fig_dist = get_plotly_dark_theme(fig_dist, height=280)
-        st.plotly_chart(fig_dist, use_container_width=True)
+        st.markdown("#### 💡 Understanding Model Drift")
+        st.markdown(f"""
+        <div class="glass-card" style="padding: 18px; line-height: 1.6;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #38BDF8; margin-bottom: 8px;">
+                How Drift Monitoring Protects Consumers
+            </div>
+            <div style="font-size: 0.88rem; color: #CBD5E1; margin-bottom: 12px;">
+                Over time, household electricity usage changes due to new appliances, weather, or seasonal shifts. 
+                BillGuard continuously measures <b>Population Stability Index (PSI)</b> to check if models need retraining:
+            </div>
+            <div style="font-size: 0.85rem; line-height: 1.8;">
+                • <span style="color: #34D399; font-weight: 700;">🟢 PSI &lt; 0.10 (Healthy):</span> Consumption matches training baseline. Model predictions are highly reliable.<br/>
+                • <span style="color: #FBBF24; font-weight: 700;">🟡 0.10 ≤ PSI &lt; 0.25 (Moderate):</span> Mild behavioral shift (e.g., seasonal change). Continues monitoring.<br/>
+                • <span style="color: #F87171; font-weight: 700;">🔴 PSI ≥ 0.25 (Critical):</span> Significant shift. Triggers retraining alert to prevent false anomaly flags.
+            </div>
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(148, 163, 184, 0.15); font-size: 0.85rem; color: #94A3B8;">
+                Current Data Integrity: <b style="color: #38BDF8;">{qual_report['data_quality_score'] * 100:.0f}% Clean Bounds</b>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Detailed Statistical Audit Table
     st.markdown("#### 📋 Detailed Feature Drift & KS Statistical Metrics")

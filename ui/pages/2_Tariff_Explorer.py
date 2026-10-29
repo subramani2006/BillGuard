@@ -193,6 +193,12 @@ with col_r4:
     effective_rate = res_unprorated.calculated_grand_total / max(1.0, sim_units)
     st.metric("Effective Rate per kWh", f"₹{effective_rate:.2f}")
 
+if diff_proration > 0:
+    st.warning(
+        f"⚠️ **Extended Billing Delay Impact**: A billing duration of **{sim_days} days** (instead of standard 60 days) "
+        f"pushes consumption into higher slabs, causing an extra **₹{diff_proration:.2f}** penalty unless prorated."
+    )
+
 # Chart of bill progression
 st.markdown("### 📈 Cost Curve Progression Across Consumption")
 if tariff_cfg.verification_status != "VERIFIED_OFFICIAL":
@@ -246,5 +252,16 @@ fig_curve.update_layout(
     xaxis_title="Energy Consumed (kWh)",
     yaxis_title="Total Bill Amount (₹ INR)",
 )
-fig_curve = get_plotly_dark_theme(fig_curve, height=380)
+fig_curve = get_plotly_dark_theme(fig_curve, height=360)
 st.plotly_chart(fig_curve, use_container_width=True)
+
+st.markdown("""
+<div class="glass-card" style="margin-top: 10px; margin-bottom: 20px; padding: 12px 18px; border-left: 3px solid #38BDF8;">
+    <div style="font-size: 0.88rem; color: #CBD5E1; line-height: 1.6;">
+        💡 <b>How to read this cost curve:</b><br/>
+        • <b>0 to 100 kWh:</b> Total bill is <b>₹0.00</b> because Government of Tamil Nadu (GoTN) provides 100 units free for domestic connections.<br/>
+        • <b>101 to 500 kWh:</b> Cost rises moderately as subsidized telescopic rates apply.<br/>
+        • <b>Above 500 kWh:</b> Curve steepens sharply as non-telescopic higher rates take effect.
+    </div>
+</div>
+""", unsafe_allow_html=True)

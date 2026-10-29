@@ -34,10 +34,33 @@ st.markdown("""
     </div>
     <div class="hero-title">⚡ BillGuard Enterprise</div>
     <p class="hero-sub">
-        An Explainable, MLOps-Driven Electricity Bill Anomaly Detection and Verification System designed for 
-        Indian domestic electricity consumers. Combines deterministic tariff mathematics, 
-        randomly-initialized deep learning OCR, unsupervised anomaly detection, and bilingual legal reasoning in English & தமிழ்.
+        An Explainable, MLOps-Driven Electricity Bill Verification & Anomaly Detection System for 
+        Indian domestic electricity consumers. Quickly verify whether your electricity bill has an overcharge, 
+        audit meter readings against statutory TNERC tariffs, and generate formal grievance petitions in English & தமிழ்.
     </p>
+</div>
+""", unsafe_allow_html=True)
+
+# Quick 3-Step Guide Card
+st.markdown("""
+<div class="glass-card" style="margin-bottom: 22px; padding: 16px 22px; border-left: 4px solid #38BDF8;">
+    <div style="font-size: 0.95rem; font-weight: 700; color: #38BDF8; margin-bottom: 6px;">
+        🚀 How to Use BillGuard in 3 Simple Steps:
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 10px;">
+        <div>
+            <div style="font-weight: 700; color: #F8FAFC; font-size: 0.92rem;">1️⃣ Select or Enter Bill</div>
+            <div style="font-size: 0.84rem; color: #94A3B8; margin-top: 3px;">Choose a demonstration scenario or input your meter readings in the <b>Bill Verifier</b>.</div>
+        </div>
+        <div>
+            <div style="font-weight: 700; color: #F8FAFC; font-size: 0.92rem;">2️⃣ Run Instant Audit</div>
+            <div style="font-size: 0.84rem; color: #94A3B8; margin-top: 3px;">BillGuard audits every slab rate, factoring in the 100-unit free subsidy and ML anomaly screening.</div>
+        </div>
+        <div>
+            <div style="font-weight: 700; color: #F8FAFC; font-size: 0.92rem;">3️⃣ Review & Download Petition</div>
+            <div style="font-size: 0.84rem; color: #94A3B8; margin-top: 3px;">Read findings in English/Tamil and download a complaint-ready PDF grievance petition.</div>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 

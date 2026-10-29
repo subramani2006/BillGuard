@@ -469,6 +469,16 @@ if should_run_audit:
             delta_color="inverse" if abs(disc) > 2.0 else "normal"
         )
 
+    # Plain-English Executive Summary
+    if abs(disc) > 2.0:
+        st.error(
+            f"🚨 **Overcharge Detected**: You were billed **{format_currency(billed_amt)}**, but statutory TNERC calculations show you should only be charged **{format_currency(t_result.calculated_grand_total)}**. Net overcharge: **{format_currency(abs(disc))}**."
+        )
+    elif abs(disc) <= 2.0 and t_result.is_valid and not report.is_anomaly:
+        st.success(
+            f"✅ **Bill Verified Correct**: Your billed amount of **{format_currency(billed_amt)}** precisely matches the official TNERC tariff calculation of **{format_currency(t_result.calculated_grand_total)}**."
+        )
+
     # Check Statuses Table (Passed, Failed, Not Performed)
     st.markdown("### 📋 Verification Checks Summary (Step 6)")
     check_rows = []

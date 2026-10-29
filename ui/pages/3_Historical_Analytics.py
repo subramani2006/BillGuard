@@ -129,19 +129,19 @@ with col2:
             delta_color="inverse" if abs(total_net_discrepancy) > 2.0 else "normal"
         )
 
-# Interactive Consumption and Billing Charts
+# Interactive Consumption and Billing Charts Side-by-Side
 st.markdown("---")
 st.markdown(f"### 📈 Longitudinal Trends for `{selected_consumer}`")
 
-tab_chart1, tab_chart2 = st.tabs(["⚡ Consumption History (kWh)", "💰 Billed vs Calculated Amount (₹)"])
+col_chart1, col_chart2 = st.columns(2)
 
-with tab_chart1:
+with col_chart1:
     fig_units = go.Figure()
     fig_units.add_trace(go.Scatter(
         x=consumer_records["current_reading_date"].dt.strftime("%Y-%m-%d"),
         y=consumer_records["recorded_units"],
         mode="lines+markers",
-        name="Recorded Consumption (kWh)",
+        name="Recorded Units",
         line=dict(color="#38BDF8", width=3),
         marker=dict(size=7, color="#38BDF8"),
         fill="tozeroy",
@@ -154,25 +154,26 @@ with tab_chart1:
         y=mean_val,
         line_dash="dot",
         line_color="#94A3B8",
-        annotation_text=f"Historical Baseline Mean: {mean_val:.1f} kWh",
+        annotation_text=f"Baseline Mean: {mean_val:.1f} kWh",
         annotation_position="bottom right",
-        annotation_font=dict(color="#CBD5E1", size=11)
+        annotation_font=dict(color="#CBD5E1", size=10)
     )
     fig_units.update_layout(
-        title=f"Consumption Trend Over 12 Billing Cycles ({selected_arch})",
-        xaxis_title="Billing Reading Date",
-        yaxis_title="Energy Consumed (kWh)",
+        title=f"⚡ Consumption History ({selected_arch})",
+        xaxis_title="Billing Date",
+        yaxis_title="Energy (kWh)",
+        margin=dict(l=20, r=20, t=40, b=20),
     )
-    fig_units = get_plotly_dark_theme(fig_units, height=380)
+    fig_units = get_plotly_dark_theme(fig_units, height=350)
     st.plotly_chart(fig_units, use_container_width=True)
 
-with tab_chart2:
+with col_chart2:
     fig_amt = go.Figure()
     fig_amt.add_trace(go.Scatter(
         x=consumer_records["current_reading_date"].dt.strftime("%Y-%m-%d"),
         y=consumer_records["calculated_grand_total"],
         mode="lines+markers",
-        name="Statutory Calculated Total (₹)",
+        name="Statutory Calculated (₹)",
         line=dict(color="#10B981", width=3),
         marker=dict(size=7, color="#10B981"),
         hovertemplate="Date: %{x}<br>Calculated: ₹%{y:,.2f}<extra></extra>"
@@ -181,18 +182,30 @@ with tab_chart2:
         x=consumer_records["current_reading_date"].dt.strftime("%Y-%m-%d"),
         y=consumer_records["billed_amount"],
         mode="lines+markers",
-        name="Billed Amount on Receipt (₹)",
+        name="Billed Amount (₹)",
         line=dict(color="#EF4444", width=3, dash="dash"),
         marker=dict(size=7, color="#EF4444"),
         hovertemplate="Date: %{x}<br>Billed: ₹%{y:,.2f}<extra></extra>"
     ))
     fig_amt.update_layout(
-        title="Billed Amount vs Statutory Calculated Obligation (Discrepancy Visualizer)",
-        xaxis_title="Billing Reading Date",
-        yaxis_title="Amount (₹ INR)",
+        title="💰 Billed vs Calculated Amount (Discrepancy)",
+        xaxis_title="Billing Date",
+        yaxis_title="Amount (₹)",
+        margin=dict(l=20, r=20, t=40, b=20),
     )
-    fig_amt = get_plotly_dark_theme(fig_amt, height=380)
+    fig_amt = get_plotly_dark_theme(fig_amt, height=350)
     st.plotly_chart(fig_amt, use_container_width=True)
+
+st.markdown("""
+<div class="glass-card" style="margin-top: 5px; margin-bottom: 20px; padding: 12px 18px; border-left: 3px solid #10B981;">
+    <div style="font-size: 0.88rem; color: #CBD5E1; line-height: 1.6;">
+        💡 <b>How to read these charts:</b> 
+        The left chart tracks units consumed (kWh) across 12 cycles. 
+        The right chart compares the <b>Statutory Calculated Bill</b> (🟢 green line) against the <b>Amount Printed on the Bill</b> (🔴 red dashed line). 
+        Any separation between the two lines represents an arithmetic overcharge or undercharge.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Longitudinal Audit Breakdown Table
 st.markdown("### 📋 Detailed Cycle-by-Cycle Longitudinal Audit Table")
